@@ -41,9 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     #installed apps
     'Authority',
+    'User',
     #third party libraries
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +72,7 @@ REST_FRAMEWORK = {
     ),
 }
 
+#it is used to specify the custome user model
 AUTH_USER_MODEL = 'Authority.Users'
 
 TEMPLATES = [

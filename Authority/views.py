@@ -11,7 +11,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 class AuthorityLoginApiview(APIView):
     def post(self,request:Request):
-        print('post')
         email=request.data.get('email')
         password=request.data.get('password')
         user=authenticate(email=email,password=password)
@@ -27,3 +26,9 @@ class AuthorityLoginApiview(APIView):
                 'refresh':str(tokens)
             }
             return Response(data=response,status=status.HTTP_200_OK)
+    def get(self,request:Request):
+        print('get')
+        content={
+            'message':'It is for Authority login only POST request is allowed'
+        }
+        return Response(data=content,status=status.HTTP_200_OK)
