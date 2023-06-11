@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'Authority',
     #third party libraries
     'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,20 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'LaborSpot.urls'
+
+REST_FRAMEWORK = {
+    #it is used becaue when we test the api's we are getting an error and shows that as "non-field-errors"
+    "NON_FIELD_ERRORS_KEY":"errors",
+    "DEFAULT_AUTHENTICATION_CLASSES":(
+        #we are avoiding this because we use only jwt authentication
+        # "rest_framework.authentication.SessionAuthentication",
+        # "rest_framework.authentication.TokenAuthentication",
+        # used when start using simpeljwt 
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+AUTH_USER_MODEL = 'Authority.Users'
 
 TEMPLATES = [
     {
