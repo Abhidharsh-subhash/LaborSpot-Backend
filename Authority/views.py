@@ -81,11 +81,81 @@ class CategoryView(GenericAPIView):
             return Response(data=response,status=status.HTTP_200_OK)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
-class UserListView(GenericAPIView):
+class UserView(GenericAPIView):
     # permission_classes=[IsAdminUser]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1).select_related('user').all()
-    def get(self,request):
-        serializer=self.serializer_class(self.get_queryset(),many=True)
-        return Response(data=serializer.data,status=status.HTTP_200_OK)
+    def get(self,request,user_id=None):
+        search_param=request.query_params.get('search','')
+        is_blocked=request.query_params.get('blocked','')
+        print(is_blocked)
+        if search_param:
+            users=self.queryset.filter(username__icontains=search_param)
+            serializer=self.serializer_class(users,many=True)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
+        # elif is_blocked:
+        #     breakpoint()
+        #     if is_blocked.lower() == 'true':
+        #         users=self.queryset.filter(is_active=False)
+        #         serializer=self.serializer_class(users,many=True)
+        #         return Response(data=serializer.data,status=status.HTTP_200_OK)
+        #     elif is_blocked.lower() == 'false':
+        #         users=self.queryset.filter(is_active=False)
+        #         serializer=self.serializer_class(users,many=True)
+        #         return Response(data=serializer.data,status=status.HTTP_200_OK)
+        #     else:
+        #         response={
+        #             'message':'Invalid parameter for is_blocked parameter',
+        #         }
+        #         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        if user_id is None:
+            serializer=self.serializer_class(self.get_queryset(),many=True)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
+        else:
+            user=get_object_or_404(self.get_queryset(),id=user_id)
+            serializer=self.serializer_class(user)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
+        
+class BlockUser(GenericAPIView):
+    serializer_class=UserSerializer
+    queryset=Users.objects.filter(is_user=1).all()
+    def patch(self,request,user_id:int):
+        user=get_object_or_404(self.get_queryset(),id=user_id)
+        if user.is_active is True:
+            user.is_active=False
+            user.save()
+            serializer=self.serializer_class(user)
+            response={
+                'message':'User blocked successfully',
+                'data':serializer.data
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
+            response={
+                'message':'User is already blocked'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
+class UnblockUser(GenericAPIView):
+    serializer_class=UserSerializer
+    queryset=Users.objects.filter(is_user=1).all()
+    def patch(self,request,user_id:int):
+        user=get_object_or_404(self.get_queryset(),id=user_id)
+        if user.is_active is False:
+            user.is_active=True
+            user.save()
+            serializer=self.serializer_class(user)
+            response={
+                'message':'User unblocked successfully',
+                'data':serializer.data
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
+            response={
+                'message':'User is already active'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+
+
+
     

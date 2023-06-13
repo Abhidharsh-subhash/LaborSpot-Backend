@@ -11,16 +11,20 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('Authority', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='User_detials',
+            name='Worker_detials',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('experience', models.IntegerField()),
+                ('charge', models.IntegerField()),
                 ('phone_number', models.IntegerField()),
                 ('photo', models.ImageField(upload_to='userimages/', verbose_name='image')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='user', to=settings.AUTH_USER_MODEL)),
+                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cat', to='Authority.job_category')),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='worker', to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

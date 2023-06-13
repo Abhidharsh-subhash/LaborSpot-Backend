@@ -3,6 +3,7 @@ from rest_framework.validators import ValidationError
 from rest_framework import serializers
 from .models import User_detials
 from django.contrib.auth import authenticate
+from django.core.validators import EmailValidator
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,6 +12,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     user_details = UserDetailsSerializer()
+    email = serializers.CharField(validators=[EmailValidator()])
     class Meta:
         model = Users
         fields = ['email', 'username', 'password', 'user_details']
@@ -32,43 +34,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         user.save()
         User_detials.objects.create(user=user, **user_detials_data)
         return user
-    
-
-
-# class SignUpSerializer(serializers.ModelSerializer):
-#     user=serializers.SerializerMethodField()
-#     def get_user(self,user):
-#         user,created=Users.objects.get_or_create(email=user.email,username=user.username,is_user=1)
-#         if created:
-#             user=Users.objects.get(email=user.email)
-#             user.set_password(user.password)
-#             user.save()
-#     class Meta:
-#         model=User_detials
-#         fields=['user','phone_number','photo']
-# class SignUpSerializer(serializers.ModelSerializer):
-#     user_details = UserDetailsSerializer()
-#     class Meta:
-#         model=Users
-#         # fields = '__all__'  # if you need to specify all the fields in the model
-#         fields=['email','username','password','user_details']
-#     def validate(self, attrs):
-#         email_exists=Users.objects.filter(email=attrs['email']).exists()
-#         if email_exists:
-#             raise ValidationError('Email has already been used')
-#         else:
-#             return super().validate(attrs)
-#     #custom create method to hash the passwords of the users
-#     def create(self, validated_data):
-#         password=validated_data.pop('password')
-#         user_details_data = validated_data.pop('user_details')
-#         validated_data['is_user'] = 1 
-#         # user=super().create(validated_data)
-#         user = Users.objects.create(**validated_data)
-#         user.set_password(password)
-#         user.save()
-#         User_detials.objects.create(user=user,**user_details_data)
-#         return user  
     
 class UserLoginSerializer(serializers.ModelSerializer):
     email=serializers.EmailField()

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     #installed apps
     'Authority',
     'User',
+    'Worker',
     #third party libraries
     'rest_framework',
     # 'rest_framework.authtoken',
@@ -83,7 +84,7 @@ SIMPLE_JWT = {
     #"Bearer <Token>"
 }
 
-#it is used to specify the custome user model
+#it is used to specify the custom user model
 AUTH_USER_MODEL = 'Authority.Users'
 
 TEMPLATES = [

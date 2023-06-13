@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
             return None
     class Meta:
         model = Users
-        fields = ['id','username','email','phone_number']
+        fields = ['id','username','email','is_active','phone_number']
 
 class CategorySerializer(serializers.ModelSerializer):
     category=serializers.CharField(max_length=30)
