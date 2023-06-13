@@ -70,6 +70,17 @@ REST_FRAMEWORK = {
         # used when start using simpeljwt 
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    "DEFAULT_PAGINATION_CLASS":"rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE":3
+}
+
+#this we will use only for configuring the jwt token
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    #"Bearer <Token>"
 }
 
 #it is used to specify the custome user model
