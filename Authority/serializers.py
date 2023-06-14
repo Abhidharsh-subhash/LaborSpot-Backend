@@ -3,6 +3,13 @@ from .models import Users,Job_Category
 from User.models import User_detials
 from Worker.models import Worker_detials
 
+class LoginSerializer(serializers.ModelSerializer):
+    email=serializers.EmailField()
+    password=serializers.CharField()
+    class Meta:
+        model = Users
+        fields = ['email','password']
+
 class UserSerializer(serializers.ModelSerializer):
     phone_number=serializers.SerializerMethodField()
     def get_phone_number(self,obj):

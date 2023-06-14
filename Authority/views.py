@@ -7,16 +7,23 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer,CategorySerializer,WorkerSerializer
+from .serializers import UserSerializer,CategorySerializer,WorkerSerializer,LoginSerializer
 from .models import Users,Job_Category
 from User.models import User_detials
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
+from .permissions import IsAuthority
+from drf_yasg.utils import swagger_auto_schema
 
 # Create your views here.
 
 class AuthorityLoginApiview(APIView):
+    serializer_class=LoginSerializer
+    @swagger_auto_schema(
+            operation_summary='Login for Authority only',
+            operation_description='This returns the success message'
+    )
     def post(self,request:Request):
         email=request.data.get('email')
         password=request.data.get('password')
@@ -41,7 +48,7 @@ class AuthorityLoginApiview(APIView):
         return Response(data=content,status=status.HTTP_200_OK)
     
 class CategoryView(GenericAPIView):
-    # permission_classes=[IsAdminUser]
+    permission_classes=[IsAuthority]
     serializer_class=CategorySerializer
     queryset=Job_Category.objects.all()
     def post(self,request):
@@ -87,7 +94,7 @@ class CategoryView(GenericAPIView):
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 class UserView(GenericAPIView):
-    # permission_classes=[IsAdminUser]
+    permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1).select_related('user').all()
     def get(self,request,user_id=None):
@@ -121,6 +128,7 @@ class UserView(GenericAPIView):
             return Response(data=serializer.data,status=status.HTTP_200_OK)
         
 class BlockUser(GenericAPIView):
+    permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1).all()
     def patch(self,request,user_id:int):
@@ -141,6 +149,7 @@ class BlockUser(GenericAPIView):
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         
 class UnblockUser(GenericAPIView):
+    permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1).all()
     def patch(self,request,user_id:int):
@@ -161,6 +170,7 @@ class UnblockUser(GenericAPIView):
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         
 class WorkerView(GenericAPIView):
+    permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
     queryset=Users.objects.filter(is_staff=True).select_related('worker').all()
     def get(self,request,worker_id=None):
@@ -178,6 +188,7 @@ class WorkerView(GenericAPIView):
             return Response(data=serializer.data,status=status.HTTP_200_OK)
         
 class BlockWorker(GenericAPIView):
+    permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
     queryset=Users.objects.filter(is_staff=True).all()
     def patch(self,request,worker_id:int):
@@ -198,6 +209,7 @@ class BlockWorker(GenericAPIView):
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         
 class UnblockWorker(GenericAPIView):
+    permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
     queryset=Users.objects.filter(is_staff=True).all()
     def patch(self,request,worker_id:int):

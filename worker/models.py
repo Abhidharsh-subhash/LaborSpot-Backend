@@ -9,7 +9,7 @@ class Worker_detials(models.Model):
     experience=models.IntegerField()
     charge=models.IntegerField()
     phone_number=models.IntegerField()
-    photo=models.ImageField('image',upload_to='userimages/')
+    photo=models.ImageField('image',upload_to='workerimages/')
 
     def __str__(self):
         return self.user.username
