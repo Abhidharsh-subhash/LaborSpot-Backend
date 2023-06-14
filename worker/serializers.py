@@ -3,6 +3,8 @@ from .models import Worker_detials
 from Authority.models import Users,Job_Category
 from django.core.validators import EmailValidator
 from rest_framework.validators import ValidationError
+from django.contrib.auth import authenticate
+from django.db import transaction
 
 class WorkerDetialsSerializer(serializers.ModelSerializer):
     category=serializers.PrimaryKeyRelatedField(queryset=Job_Category.objects.all())
@@ -26,8 +28,35 @@ class SignupSerializer(serializers.ModelSerializer):
         password=validated_data.pop('password')
         Worker_detials_data=validated_data.pop('Worker_detials')
         validated_data['is_staff']=True
-        user=super(SignupSerializer,self).create(validated_data)
-        user.set_password(password)
-        user.save()
-        Worker_detials.objects.create(user=user,**Worker_detials_data)
+        with transaction.atomic():
+            try:
+                user=super(SignupSerializer,self).create(validated_data)
+                user.set_password(password)
+                user.save()
+                Worker_detials.objects.create(worker=user,**Worker_detials_data)
+            except Exception as e:
+                user.delete()
+                raise e
         return user
+
+class WorkerLoginSerializer(serializers.ModelSerializer):
+    email=serializers.EmailField()
+    password=serializers.CharField(style={'input-type':'password'})
+    class Meta:
+        model = Users
+        fields = ['email','password']
+    def validate(self, attrs):
+        email=attrs.get('email')
+        password=attrs.get('password')
+        if email and password:
+            user=authenticate(email=email,password=password)
+            if user:
+                if not (user.is_staff == True):
+                    raise serializers.ValidationError('You are not authorized to perform this action')
+                else:
+                    attrs['user']=user
+            else:
+                raise serializers.ValidationError('Invalid Username or Password')
+        else:
+            raise serializers.ValidationError('Username and Password are required')
+        return attrs

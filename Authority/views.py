@@ -7,7 +7,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer,CategorySerializer
+from .serializers import UserSerializer,CategorySerializer,WorkerSerializer
 from .models import Users,Job_Category
 from User.models import User_detials
 from django.shortcuts import get_object_or_404
@@ -57,6 +57,11 @@ class CategoryView(GenericAPIView):
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     def get(self,request,cat_id=None):
+        search_param=request.query_params.get('search','')
+        if search_param:
+            category=self.queryset.filter(category__icontains=search_param)
+            serializer=self.serializer_class(category,many=True)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
         if cat_id is not None:
             cat=get_object_or_404(Job_Category,pk=cat_id)
             serializer=self.serializer_class(instance=cat)
@@ -87,8 +92,7 @@ class UserView(GenericAPIView):
     queryset=Users.objects.filter(is_user=1).select_related('user').all()
     def get(self,request,user_id=None):
         search_param=request.query_params.get('search','')
-        is_blocked=request.query_params.get('blocked','')
-        print(is_blocked)
+        # is_blocked=request.query_params.get('blocked','')
         if search_param:
             users=self.queryset.filter(username__icontains=search_param)
             serializer=self.serializer_class(users,many=True)
@@ -155,6 +159,64 @@ class UnblockUser(GenericAPIView):
                 'message':'User is already active'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
+class WorkerView(GenericAPIView):
+    serializer_class=WorkerSerializer
+    queryset=Users.objects.filter(is_staff=True).select_related('worker').all()
+    def get(self,request,worker_id=None):
+        search_param=request.query_params.get('search','')
+        if search_param:
+            workers=self.queryset.filter(username__icontains=search_param)
+            serializer=self.serializer_class(workers,many=True)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
+        if worker_id is None:
+            serializer=self.serializer_class(self.get_queryset(),many=True)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
+        else:
+            worker=get_object_or_404(self.get_queryset(),id=worker_id)
+            serializer=self.serializer_class(worker)
+            return Response(data=serializer.data,status=status.HTTP_200_OK)
+        
+class BlockWorker(GenericAPIView):
+    serializer_class=WorkerSerializer
+    queryset=Users.objects.filter(is_staff=True).all()
+    def patch(self,request,worker_id:int):
+        worker=get_object_or_404(self.get_queryset(),id=worker_id)
+        if worker.is_active is True:
+            worker.is_active=False
+            worker.save()
+            serializer=self.serializer_class(worker)
+            response={
+                'message':'Worker blocked successfully',
+                'data':serializer.data
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
+            response={
+                'message':'Worker is already blocked'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
+class UnblockWorker(GenericAPIView):
+    serializer_class=WorkerSerializer
+    queryset=Users.objects.filter(is_staff=True).all()
+    def patch(self,request,worker_id:int):
+        worker=get_object_or_404(self.get_queryset(),id=worker_id)
+        if worker.is_active is False:
+            worker.is_active=True
+            worker.save()
+            serializer=self.serializer_class(worker)
+            response={
+                'message':'Worker unblocked successfully',
+                'data':serializer.data
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
+            response={
+                'message':'Worker is alredy active'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
