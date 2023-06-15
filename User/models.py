@@ -3,7 +3,7 @@ from Authority.models import Users
 
 # Create your models here.
 
-class User_detials(models.Model):
+class User_details(models.Model):
     user=models.OneToOneField(Users,on_delete=models.CASCADE,related_name='user')
     phone_number=models.IntegerField()
     photo=models.ImageField('image',upload_to='userimages/')

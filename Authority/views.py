@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer,CategorySerializer,WorkerSerializer,LoginSerializer
 from .models import Users,Job_Category
-from User.models import User_detials
+from User.models import User_details
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
@@ -30,7 +30,7 @@ class AuthorityLoginApiview(APIView):
         user=authenticate(email=email,password=password)
         if user is None:
             return Response(data={'message':'Invalid email or password'},status=status.HTTP_401_UNAUTHORIZED)
-        elif not user.is_superuser:
+        elif not (user.is_superuser and user.is_verified):
              return Response({'message': 'You are not authorized to perform this action'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             tokens = RefreshToken.for_user(user)

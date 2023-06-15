@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Users,Job_Category
-from User.models import User_detials
-from Worker.models import Worker_detials
+from User.models import User_details
+from Worker.models import Worker_details
 
 class LoginSerializer(serializers.ModelSerializer):
     email=serializers.EmailField()
@@ -14,9 +14,9 @@ class UserSerializer(serializers.ModelSerializer):
     phone_number=serializers.SerializerMethodField()
     def get_phone_number(self,obj):
         try:
-            detail=User_detials.objects.get(user=obj.id)
+            detail=User_details.objects.get(user=obj.id)
             return detail.phone_number
-        except User_detials.DoesNotExist:
+        except User_details.DoesNotExist:
             return None
     class Meta:
         model = Users
@@ -47,21 +47,21 @@ class WorkerSerializer(serializers.ModelSerializer):
     #         return None
     def get_experience(self,obj):
         try:
-            exp_detail=Worker_detials.objects.get(worker=obj.id)
+            exp_detail=Worker_details.objects.get(worker=obj.id)
             return exp_detail.experience
-        except Worker_detials.DoesNotExist:
+        except Worker_details.DoesNotExist:
             return None
     def get_charge(self,obj):
         try:
-            cha_detail=Worker_detials.objects.get(worker=obj.id)
+            cha_detail=Worker_details.objects.get(worker=obj.id)
             return cha_detail.charge
-        except Worker_detials.DoesNotExist:
+        except Worker_details.DoesNotExist:
             return None
     def get_phone_number(self,obj):
         try:
-            ph_detail=Worker_detials.objects.get(worker=obj.id)
+            ph_detail=Worker_details.objects.get(worker=obj.id)
             return ph_detail.phone_number
-        except User_detials.DoesNotExist:
+        except Worker_details.DoesNotExist:
             return None
     class Meta:
         model=Users

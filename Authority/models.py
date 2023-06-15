@@ -25,6 +25,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff',False)
         extra_fields.setdefault('is_active',True)
         extra_fields.setdefault('is_superuser',True)
+        extra_fields.setdefault('is_verified',True)
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser has to have is_superuser being True')
         return self.create_user(email=email,password=password,**extra_fields)
@@ -37,13 +38,15 @@ class Users(AbstractUser):
     email=models.CharField(max_length=80,unique=True)
     username=models.CharField(max_length=45)
     is_user=models.IntegerField(choices=choices,default=0)
+    is_verified=models.BooleanField(default=False)
+    otp=models.CharField(max_length=6,null=True,blank=True)
 
     objects=CustomUserManager()
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
-        return self.username
+        return self.email
     
 class Job_Category(models.Model):
     category=models.CharField(max_length=30)

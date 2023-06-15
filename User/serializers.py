@@ -1,13 +1,13 @@
 from Authority.models import Users
 from rest_framework.validators import ValidationError
 from rest_framework import serializers
-from .models import User_detials
+from .models import User_details
 from django.contrib.auth import authenticate
 from django.core.validators import EmailValidator
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User_detials
+        model = User_details
         fields = ['phone_number', 'photo']
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -19,7 +19,8 @@ class SignUpSerializer(serializers.ModelSerializer):
         # fields = '__all__'
     
     def validate(self, attrs):
-        email_exists = Users.objects.filter(email=attrs['email']).exists()
+        queryset = Users.objects.filter(is_user=1).all()
+        email_exists = queryset.filter(email=attrs['email']).exists()
         if email_exists:
             raise ValidationError('Email has already been used')
         else:
@@ -27,13 +28,17 @@ class SignUpSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         password = validated_data.pop('password')
-        user_detials_data = validated_data.pop('user_details')
+        user_details_data = validated_data.pop('user_details')
         validated_data['is_user'] = 1
         user = super(SignUpSerializer, self).create(validated_data)
         user.set_password(password)
         user.save()
-        User_detials.objects.create(user=user, **user_detials_data)
+        User_details.objects.create(user=user, **user_details_data)
         return user
+
+class VerifyAccountSerializer(serializers.Serializer):
+    email=serializers.EmailField()
+    otp=serializers.CharField()
     
 class UserLoginSerializer(serializers.ModelSerializer):
     email=serializers.EmailField()
@@ -47,7 +52,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
         if email and password:
             user=authenticate(email=email,password=password)
             if user:
-                if not (user.is_user == 1):
+                if not (user.is_user == 1 and user.is_verified):
                     raise serializers.ValidationError('You are not authorized to perform this action')
                 else:
                     attrs['user']=user
