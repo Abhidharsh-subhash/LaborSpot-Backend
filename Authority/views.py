@@ -96,7 +96,7 @@ class CategoryView(GenericAPIView):
 class UserView(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=UserSerializer
-    queryset=Users.objects.filter(is_user=1).select_related('user').all()
+    queryset=Users.objects.filter(is_user=1,is_verified=True).select_related('user').all()
     def get(self,request,user_id=None):
         search_param=request.query_params.get('search','')
         # is_blocked=request.query_params.get('blocked','')

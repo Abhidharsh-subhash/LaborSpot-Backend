@@ -19,7 +19,6 @@ from django.core.mail import EmailMessage
 # Create your views here.
 
 def send_otp_via_mail(email):
-    print('enter')
     if email:
         user=Users.objects.get(email=email)
         otp=random.randint(1000,9999)

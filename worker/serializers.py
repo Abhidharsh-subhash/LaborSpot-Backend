@@ -11,8 +11,22 @@ class PhoneValidator(RegexValidator):
     regex = r'^\+?[1-9]\d{1,14}$'
     message = "Enter a valid phone number."
 
+class OTPValidator(RegexValidator):
+    regex = r'^\d{4}$'
+    message = "Enter a valid OTP with 4 digits."
+
+class UsernameValidator(RegexValidator):
+    regex = r'^[a-zA-Z]+$'
+    message = "Enter a valid username with only characters."
+
+class ExperienceValidator(RegexValidator):
+    regex = r'^\d{1,2}$'
+    message = "Enter a valid experience."
+
 class WorkerDetialsSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(validators=[PhoneValidator()])
+    experience = serializers.IntegerField(validators=[ExperienceValidator()])
+    charge = serializers.IntegerField()
     category=serializers.PrimaryKeyRelatedField(queryset=Job_Category.objects.all())
     def validate(self, attrs):
         phone_number = attrs.get('phone_number')
@@ -27,6 +41,8 @@ class WorkerDetialsSerializer(serializers.ModelSerializer):
 class SignupSerializer(serializers.ModelSerializer):
     Worker_details = WorkerDetialsSerializer()
     email=serializers.CharField(validators=[EmailValidator()])
+    username=serializers.CharField(validators=[UsernameValidator()])
+    password=serializers.CharField()
     class Meta:
         model = Users
         fields = ['email', 'username', 'password', 'Worker_details']
@@ -54,10 +70,10 @@ class SignupSerializer(serializers.ModelSerializer):
 
 class VerifyAccountSerializer(serializers.Serializer):
     phone_number=serializers.CharField(validators=[PhoneValidator()])
-    otp=serializers.CharField()
+    otp=serializers.CharField(validators=[OTPValidator()])
 
 class WorkerLoginSerializer(serializers.ModelSerializer):
-    email=serializers.EmailField()
+    email=serializers.EmailField(validators=[EmailValidator()])
     password=serializers.CharField(style={'input-type':'password'})
     class Meta:
         model = Users

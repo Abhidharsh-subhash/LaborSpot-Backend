@@ -5,10 +5,15 @@ from .models import User_details
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from django.core.validators import EmailValidator
+from django.db import transaction
 
 class PhoneValidator(RegexValidator):
     regex = r'^\+?[1-9]\d{1,14}$'
     message = "Enter a valid phone number."
+
+class OTPValidator(RegexValidator):
+    regex = r'^\d{4}$'
+    message = "Enter a valid OTP with 4 digits."
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(validators=[PhoneValidator()])
@@ -41,18 +46,23 @@ class SignUpSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user_details_data = validated_data.pop('user_details')
         validated_data['is_user'] = 1
-        user = super(SignUpSerializer, self).create(validated_data)
-        user.set_password(password)
-        user.save()
-        User_details.objects.create(user=user, **user_details_data)
+        with transaction.atomic():
+            try:
+                user = super(SignUpSerializer, self).create(validated_data)
+                user.set_password(password)
+                user.save()
+                User_details.objects.create(user=user, **user_details_data)
+            except Exception as e:
+                user.delete()
+                raise e
         return user
 
 class VerifyAccountSerializer(serializers.Serializer):
-    email=serializers.EmailField()
-    otp=serializers.CharField()
+    email=serializers.EmailField(validators=[EmailValidator()])
+    otp=serializers.CharField(validators=[OTPValidator()])
     
 class UserLoginSerializer(serializers.ModelSerializer):
-    email=serializers.EmailField()
+    email=serializers.EmailField(validators=[EmailValidator()])
     password=serializers.CharField(style={'input-type':'password'})
     class Meta:
         model=Users

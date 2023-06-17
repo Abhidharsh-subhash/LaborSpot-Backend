@@ -2,9 +2,15 @@ from rest_framework import serializers
 from .models import Users,Job_Category
 from User.models import User_details
 from Worker.models import Worker_details
+from django.core.validators import EmailValidator
+from django.core.validators import RegexValidator
+
+class CategoryValidator(RegexValidator):
+    regex = r'^[a-zA-Z]+$'
+    message = "Enter a valid username with only characters."
 
 class LoginSerializer(serializers.ModelSerializer):
-    email=serializers.EmailField()
+    email=serializers.EmailField(validators=[EmailValidator()])
     password=serializers.CharField()
     class Meta:
         model = Users
@@ -23,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id','username','email','is_active','phone_number']
 
 class CategorySerializer(serializers.ModelSerializer):
-    category=serializers.CharField(max_length=30)
+    category=serializers.CharField(max_length=30,validators=[CategoryValidator()])
     class Meta:
         model = Job_Category
         fields = '__all__'
