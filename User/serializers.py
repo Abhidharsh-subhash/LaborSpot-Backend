@@ -3,9 +3,20 @@ from rest_framework.validators import ValidationError
 from rest_framework import serializers
 from .models import User_details
 from django.contrib.auth import authenticate
+from django.core.validators import RegexValidator
 from django.core.validators import EmailValidator
 
+class PhoneValidator(RegexValidator):
+    regex = r'^\+?[1-9]\d{1,14}$'
+    message = "Enter a valid phone number."
+
 class UserDetailsSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(validators=[PhoneValidator()])
+    def validate(self, attrs):
+        phone_number = attrs.get('phone_number')
+        if User_details.objects.filter(phone_number=phone_number).exists():
+            raise ValidationError('Phone number already exists')
+        return super().validate(attrs)
     class Meta:
         model = User_details
         fields = ['phone_number', 'photo']

@@ -9,25 +9,36 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import APIException
 # from .emails import send_otp_via_mail
-from django.core.mail import send_mail
+# from django.core.mail import send_mail
 import random
 from django.conf import settings
 from Authority.models import Users
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
 # Create your views here.
 
 def send_otp_via_mail(email):
     print('enter')
     if email:
-        print(email)
-        subject='Your account verification mail'
+        user=Users.objects.get(email=email)
         otp=random.randint(1000,9999)
-        message=f'Your otp is {otp}'
-        email_from=settings.EMAIL_HOST
-        send_mail(subject,message,email_from,[email])
-        user_obj=Users.objects.get(email=email)
-        user_obj.otp=otp
-        user_obj.save()
+        html_template = 'useremail.html'
+        mydict = {
+            'username': user.username,
+            'otp':otp
+        }
+        html_message = render_to_string(html_template,{'mydict':mydict})
+        subject='Welcome to LaborSpot'
+        # message=f'Your otp is {otp}'
+        # email_from=settings.EMAIL_HOST
+        email_from=settings.EMAIL_HOST_USER
+        message=EmailMessage(subject, html_message,email_from, [email])
+        # send_mail(subject,html_message,email_from,[email])
+        message.content_subtype = 'html'
+        message.send()
+        user.otp=otp
+        user.save()
         print('email send successfully')
     else:
         print('error at send_otp_via_mail')
@@ -43,7 +54,7 @@ class UserSignUpView(GenericAPIView):
                 send_otp_via_mail(data['email'])
             except:
                 serializer.instance.delete()
-                raise APIException('Failed to send otp mail. Registration data deleted')
+                raise APIException('Failed to send otp mail. Register again')
             response={
                 'message':'User registration successfull,check email and verify by otp',
             }
@@ -62,18 +73,15 @@ class UserVerifyotp(APIView):
             data=request.data
             serializer=self.serializer_class(data=data)
             if serializer.is_valid():
-                print('first')
                 email=serializer.data['email']
                 otp=serializer.data['otp']
                 user=Users.objects.get(email=email)
                 if not user:
-                    print('second')
                     response={
                         'message':'Invalid Email address'
                     }
                     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
                 if user.otp == otp:
-                    print('third')
                     user.is_verified=True
                     user.save()
                     response={

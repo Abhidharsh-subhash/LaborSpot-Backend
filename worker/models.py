@@ -8,8 +8,8 @@ class Worker_details(models.Model):
     category=models.ForeignKey(Job_Category,on_delete=models.CASCADE,related_name='cat')
     experience=models.IntegerField()
     charge=models.IntegerField()
-    phone_number=models.IntegerField()
+    phone_number=models.CharField(max_length=10)
     photo=models.ImageField('image',upload_to='workerimages/')
 
     def __str__(self):
-        return self.user.username
+        return self.phone_number

@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     #third party libraries
     'rest_framework',
     # 'rest_framework.authtoken',
-    'rest_framework_simplejwt',
+    'rest_framework_simplejwt',#or djoser
     'drf_yasg',
 ]
 
@@ -102,7 +102,7 @@ AUTH_USER_MODEL = 'Authority.Users'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

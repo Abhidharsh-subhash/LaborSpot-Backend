@@ -4,10 +4,22 @@ from Authority.models import Users,Job_Category
 from django.core.validators import EmailValidator
 from rest_framework.validators import ValidationError
 from django.contrib.auth import authenticate
+from django.core.validators import RegexValidator
 from django.db import transaction
 
+class PhoneValidator(RegexValidator):
+    regex = r'^\+?[1-9]\d{1,14}$'
+    message = "Enter a valid phone number."
+
 class WorkerDetialsSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(validators=[PhoneValidator()])
     category=serializers.PrimaryKeyRelatedField(queryset=Job_Category.objects.all())
+    def validate(self, attrs):
+        phone_number = attrs.get('phone_number')
+        if Worker_details.objects.filter(phone_number=phone_number).exists():
+            raise ValidationError('Phone number already exists')
+        return super().validate(attrs)
+
     class Meta:
         model = Worker_details
         fields = ['category','experience','charge','phone_number','photo']
@@ -17,7 +29,7 @@ class SignupSerializer(serializers.ModelSerializer):
     email=serializers.CharField(validators=[EmailValidator()])
     class Meta:
         model = Users
-        fields = ['email', 'username', 'password', 'Worker_detials']
+        fields = ['email', 'username', 'password', 'Worker_details']
     def validate(self, attrs):
         queryset = Users.objects.filter(is_staff=True)
         email_exists = queryset.filter(email=attrs['email']).exists()
@@ -27,7 +39,7 @@ class SignupSerializer(serializers.ModelSerializer):
             return super().validate(attrs)
     def create(self, validated_data):
         password=validated_data.pop('password')
-        Worker_details_data=validated_data.pop('Worker_detials')
+        Worker_details_data=validated_data.pop('Worker_details')
         validated_data['is_staff']=True
         with transaction.atomic():
             try:
@@ -39,6 +51,10 @@ class SignupSerializer(serializers.ModelSerializer):
                 user.delete()
                 raise e
         return user
+
+class VerifyAccountSerializer(serializers.Serializer):
+    phone_number=serializers.CharField(validators=[PhoneValidator()])
+    otp=serializers.CharField()
 
 class WorkerLoginSerializer(serializers.ModelSerializer):
     email=serializers.EmailField()

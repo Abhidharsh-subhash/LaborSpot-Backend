@@ -47,6 +47,15 @@ class Users(AbstractUser):
 
     def __str__(self):
         return self.email
+    # def is_valid(self) -> bool:
+    #     """10 mins OTP validation"""
+    #     lifespan_in_seconds = float(settings.OTP_EXPIRE_TIME * 60)
+    #     now = datetime.now(timezone.utc)
+    #     time_diff = now - self.created_at
+    #     time_diff = time_diff.total_seconds()
+    #     if time_diff >= lifespan_in_seconds:
+    #         return False
+    #     return True
     
 class Job_Category(models.Model):
     category=models.CharField(max_length=30)
