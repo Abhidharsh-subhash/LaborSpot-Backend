@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'rest_framework.authtoken',
     'rest_framework_simplejwt',#or djoser
+    'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
 ]
 
@@ -89,11 +90,12 @@ SWAGGER_SETTINGS = {
 
 #this we will use only for configuring the jwt token
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "SIGNING_KEY": SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),
     #"Bearer <Token>"
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
 
 #it is used to specify the custom user model

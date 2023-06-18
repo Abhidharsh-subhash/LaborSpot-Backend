@@ -8,7 +8,7 @@ from django.core.validators import RegexValidator
 from django.db import transaction
 
 class PhoneValidator(RegexValidator):
-    regex = r'^\+?[1-9]\d{1,14}$'
+    regex = r'^\+?[1-9]\d{9}$'
     message = "Enter a valid phone number."
 
 class OTPValidator(RegexValidator):

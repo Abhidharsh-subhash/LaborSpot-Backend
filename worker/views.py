@@ -26,6 +26,7 @@ class WorkerSignUpView(GenericAPIView):
                 serializer.instance.delete()
                 raise APIException('Failed to send otp to your phone. Register again')
             response={
+                'status':200,
                 'message':'Worker registered successfully,Confrim by entering your Otp',
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
@@ -45,27 +46,38 @@ class WorkerVerifyotp(APIView):
             if serializer.is_valid():
                 phone_number=serializer.data['phone_number']
                 otp=serializer.data['otp']
-                worker=Worker_details.objects.get(phone_number=phone_number)
-                user=worker.worker
-                if not user:
-                    response={
-                        'message':'Invalid Phone number'
+                try:
+                    worker=Worker_details.objects.get(phone_number=phone_number)
+                    user=worker.worker
+                    if not user:
+                        response={
+                            'status':400,
+                            'message':'Invalid Phone number'
+                        }
+                        return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+                    if user.otp == otp:
+                        user.is_verified=True
+                        user.save()
+                        response={
+                            'status':200,
+                            'message':'Otp Verified you can login with your credentials'
+                        }
+                        return Response(data=response,status=status.HTTP_200_OK)
+                    else:
+                        response={
+                            'status':400,
+                            'message':'Wrong otp'
+                        }
+                        return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+                except Worker_details.DoesNotExist:
+                    response = {
+                        'status':400,
+                        'message': 'Worker not found for the provided phone number'
                     }
-                    return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                if user.otp == otp:
-                    user.is_verified=True
-                    user.save()
-                    response={
-                        'message':'Otp Verified you can login with your credentials'
-                    }
-                    return Response(data=response,status=status.HTTP_200_OK)
-                else:
-                    response={
-                        'message':'Wrong otp'
-                    }
-                    return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+                    return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
         except:
             response={
+                'status':400,
                 'message':'Something went wrong'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -79,13 +91,9 @@ class WorkerLoginView(GenericAPIView):
         user=serializer.validated_data['user']
         tokens=RefreshToken.for_user(user)
         response={
+            'status':200,
             'message':'Worker login successfull',
             'access':str(tokens.access_token),
             'refresh':str(tokens),
-        }
-        return Response(data=response,status=status.HTTP_200_OK)
-    def get(self,request):
-        response={
-            'message':'It is for Worker login only Post request is allowed'
         }
         return Response(data=response,status=status.HTTP_200_OK)

@@ -15,6 +15,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from .permissions import IsAuthority
 from drf_yasg.utils import swagger_auto_schema
+from .token_handling import CustomJWTAuthentication
 
 # Create your views here.
 
@@ -29,23 +30,44 @@ class AuthorityLoginApiview(APIView):
         password=request.data.get('password')
         user=authenticate(email=email,password=password)
         if user is None:
-            return Response(data={'message':'Invalid email or password'},status=status.HTTP_401_UNAUTHORIZED)
+            response={
+                'status':200,
+                'message':'Invalid email or password'
+            }
+            return Response(data=response,status=status.HTTP_401_UNAUTHORIZED)
         elif not (user.is_superuser and user.is_verified):
-             return Response({'message': 'You are not authorized to perform this action'}, status=status.HTTP_401_UNAUTHORIZED)
+             response={
+                 'status':400,
+                 'message': 'You are not authorized to perform this action'
+             }
+             return Response(data=response, status=status.HTTP_401_UNAUTHORIZED)
         else:
             tokens = RefreshToken.for_user(user)
             response={
+                'status':200,
                 'message':'Authority Login successfull',
                 'access':str(tokens.access_token),
                 'refresh':str(tokens)
             }
             return Response(data=response,status=status.HTTP_200_OK)
-    def get(self,request:Request):
-        print('get')
-        content={
-            'message':'It is for Authority login only POST request is allowed'
-        }
-        return Response(data=content,status=status.HTTP_200_OK)
+class AuthorityLogoutView(APIView):
+    permission_classes=[IsAuthority]
+    def post(self,request):
+        try:
+            refresh_token=request.data.get('refresh_token')
+            token_object = RefreshToken(refresh_token)
+            token_object.blacklist()
+            response={
+                'status':200,
+                'message':'Authority logged out successfully'
+            } 
+            return Response(data=response,status=status.HTTP_200_OK)
+        except:
+            response={
+                'status':400,
+                'message':'Authority logout failed'
+            } 
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
     
 class CategoryView(GenericAPIView):
     permission_classes=[IsAuthority]
@@ -58,13 +80,15 @@ class CategoryView(GenericAPIView):
             cat=Job_Category(category=category)
             cat.save()
             response={
+                'status':201,
                 'message':'New category added successfully'
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    def get(self,request,cat_id=None):
-        search_param=request.query_params.get('search','')
+    def get(self,request):
+        search_param=request.data.get('search')
+        cat_id = request.data.get('cat_id')
         if search_param:
             category=self.queryset.filter(category__icontains=search_param)
             serializer=self.serializer_class(category,many=True)
@@ -76,17 +100,25 @@ class CategoryView(GenericAPIView):
         else:
             serializer=self.serializer_class(self.get_queryset(),many=True)
             return Response(data=serializer.data,status=status.HTTP_200_OK)
-    def delete(self,request,cat_id:int):
-        cat=get_object_or_404(Job_Category,pk=cat_id)
-        cat.delete()
-        return Response(data={'message':'Category deleted successfully'},status=status.HTTP_204_NO_CONTENT)
-    def put(self,request,cat_id:int):
+    def delete(self,request):
+        cat_id=request.data.get('cat_id')
+        if cat_id:
+            cat=get_object_or_404(Job_Category,pk=cat_id)
+            cat.delete()
+            response={
+                'status':204,
+                'message':'Category deleted successfully'
+            }
+            return Response(data=response,status=status.HTTP_204_NO_CONTENT)
+    def put(self,request):
+        cat_id=request.data.get('cat_id')
         cat=get_object_or_404(Job_Category,pk=cat_id)
         data=request.data
         serializer=self.serializer_class(instance=cat,data=data)
         if serializer.is_valid():
             serializer.save()
             response={
+                'status':200,
                 'message':'Category updated',
                 'data':serializer.data
             }
@@ -94,11 +126,13 @@ class CategoryView(GenericAPIView):
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 class UserView(GenericAPIView):
+    authentication_classes=[CustomJWTAuthentication]
     permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1,is_verified=True).select_related('user').all()
-    def get(self,request,user_id=None):
+    def get(self,request):
         search_param=request.query_params.get('search','')
+        user_id=request.data.get('user_id')
         # is_blocked=request.query_params.get('blocked','')
         if search_param:
             users=self.queryset.filter(username__icontains=search_param)
@@ -131,19 +165,22 @@ class BlockUser(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1).all()
-    def patch(self,request,user_id:int):
+    def patch(self,request):
+        user_id=request.data.get('user_id')
         user=get_object_or_404(self.get_queryset(),id=user_id)
         if user.is_active is True:
             user.is_active=False
             user.save()
             serializer=self.serializer_class(user)
             response={
+                'status':200,
                 'message':'User blocked successfully',
                 'data':serializer.data
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
+                'status':400,
                 'message':'User is already blocked'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -152,19 +189,22 @@ class UnblockUser(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1).all()
-    def patch(self,request,user_id:int):
+    def patch(self,request):
+        user_id=request.data.get('user_id')
         user=get_object_or_404(self.get_queryset(),id=user_id)
         if user.is_active is False:
             user.is_active=True
             user.save()
             serializer=self.serializer_class(user)
             response={
+                'status':200,
                 'message':'User unblocked successfully',
                 'data':serializer.data
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
+                'status':400,
                 'message':'User is already active'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -173,8 +213,9 @@ class WorkerView(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
     queryset=Users.objects.filter(is_staff=True).select_related('worker').all()
-    def get(self,request,worker_id=None):
-        search_param=request.query_params.get('search','')
+    def get(self,request):
+        worker_id=request.data.get('worker_id')
+        search_param=request.data.get('search')
         if search_param:
             workers=self.queryset.filter(username__icontains=search_param)
             serializer=self.serializer_class(workers,many=True)
@@ -191,19 +232,22 @@ class BlockWorker(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
     queryset=Users.objects.filter(is_staff=True).all()
-    def patch(self,request,worker_id:int):
+    def patch(self,request):
+        worker_id=request.data.get('worker_id')
         worker=get_object_or_404(self.get_queryset(),id=worker_id)
         if worker.is_active is True:
             worker.is_active=False
             worker.save()
             serializer=self.serializer_class(worker)
             response={
+                'status':200,
                 'message':'Worker blocked successfully',
                 'data':serializer.data
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
+                'status':400,
                 'message':'Worker is already blocked'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -212,19 +256,22 @@ class UnblockWorker(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
     queryset=Users.objects.filter(is_staff=True).all()
-    def patch(self,request,worker_id:int):
+    def patch(self,request):
+        worker_id=request.data.get('worker_id')
         worker=get_object_or_404(self.get_queryset(),id=worker_id)
         if worker.is_active is False:
             worker.is_active=True
             worker.save()
             serializer=self.serializer_class(worker)
             response={
+                'status':200,
                 'message':'Worker unblocked successfully',
                 'data':serializer.data
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
+                'status':400,
                 'message':'Worker is alredy active'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)

@@ -8,7 +8,7 @@ from django.core.validators import EmailValidator
 from django.db import transaction
 
 class PhoneValidator(RegexValidator):
-    regex = r'^\+?[1-9]\d{1,14}$'
+    regex = r'^\+?[1-9]\d{9}$'
     message = "Enter a valid phone number."
 
 class OTPValidator(RegexValidator):
@@ -82,3 +82,8 @@ class UserLoginSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError('Email and Password are required')
         return attrs
+    
+class UserPrivacySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = ['password']
