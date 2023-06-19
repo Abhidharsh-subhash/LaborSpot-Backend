@@ -24,3 +24,24 @@ def send_sms(phone,mail):
 
     print(message.sid)
     print('message send successfully')
+
+def forgot_sms(phone,mail):
+    account_sid = config('account_sid')
+    auth_token = config('auth_token')
+    client = Client(account_sid, auth_token)
+    otp=random.randint(1000,9999)
+    phone_number='+91'+phone
+    try:
+        user=Users.objects.get(is_staff=True,email=mail)
+        user.otp=otp
+        user.save()
+    except Exception as e:
+        raise e
+
+    message = client.messages.create(
+        body=f"You verification code for changing the password is {otp}",
+        from_='+14066938441',to=phone_number
+    )
+
+    print(message.sid)
+    print('message send successfully')

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer
+from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -26,7 +26,7 @@ class WorkerSignUpView(GenericAPIView):
                 serializer.instance.delete()
                 raise APIException('Failed to send otp to your phone. Register again')
             response={
-                'status':200,
+                'status':201,
                 'message':'Worker registered successfully,Confrim by entering your Otp',
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
@@ -57,6 +57,7 @@ class WorkerVerifyotp(APIView):
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
                     if user.otp == otp:
                         user.is_verified=True
+                        user.otp=None
                         user.save()
                         response={
                             'status':200,
@@ -97,3 +98,24 @@ class WorkerLoginView(GenericAPIView):
             'refresh':str(tokens),
         }
         return Response(data=response,status=status.HTTP_200_OK)
+    
+class ForgotPassword(GenericAPIView):
+    serializer_class=ForgotPasswordSerializer
+    def patch(self,request):
+        data=request.data
+        serializer=self.serializer_class(data=data)
+        if not serializer.is_valid:
+            response={
+                'status':400,
+                'message':'Something went wrong'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        response={
+            'status':200,
+            'message':'Otp sent successfully'
+        }
+        return Response(data=response,status=status.HTTP_200_OK)
+
+class VerifyForgototp(GenericAPIView):
+    pass
+

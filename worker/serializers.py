@@ -6,6 +6,8 @@ from rest_framework.validators import ValidationError
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from django.db import transaction
+from rest_framework.exceptions import AuthenticationFailed
+from .send_sms import forgot_sms
 
 class PhoneValidator(RegexValidator):
     regex = r'^\+?[1-9]\d{9}$'
@@ -93,3 +95,23 @@ class WorkerLoginSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError('Username and Password are required')
         return attrs
+    
+class ForgotPasswordSerializer(serializers.ModelSerializer):
+    phone_number=serializers.CharField(validators=[PhoneValidator])
+    class Meta:
+        model=Worker_details
+        fields=['phone_number']
+    def validate(self, attrs):
+        phone_number=attrs.get('phone_number')
+        try:
+            worker=Worker_details.objects.get(phone_number=phone_number)
+            user = worker.worker
+            mail=user.email
+            forgot_sms(phone_number,mail)
+        except Worker_details.DoesNotExist:
+            raise AuthenticationFailed('Worker with the provided phone number doest not exist')
+        return user
+
+class VerifyForgot(serializers.ModelSerializer):
+    pass
+        
