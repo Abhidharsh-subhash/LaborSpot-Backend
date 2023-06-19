@@ -1,4 +1,3 @@
-from django.core.mail import send_mail
 import random
 from django.conf import settings
 from Authority.models import Users
@@ -42,3 +41,11 @@ def send_otp_via_mail(email):
         print('email send successfully')
     else:
         print('error at send_otp_via_mail')
+
+def forgot_send_mail(data):
+    email=EmailMessage(
+        subject=data['email_subject'],
+        body=data['email_body'],
+        to=[data['to_email']]
+    )
+    email.send()
