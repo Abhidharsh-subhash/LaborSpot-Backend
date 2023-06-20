@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from .permissions import IsAuthority
 from drf_yasg.utils import swagger_auto_schema
 from .token_handling import CustomJWTAuthentication
+from django.db.models import Q
 
 # Create your views here.
 
@@ -50,6 +51,7 @@ class AuthorityLoginApiview(APIView):
                 'refresh':str(tokens)
             }
             return Response(data=response,status=status.HTTP_200_OK)
+        
 class AuthorityLogoutView(APIView):
     permission_classes=[IsAuthority]
     def post(self,request):
@@ -212,7 +214,7 @@ class UnblockUser(GenericAPIView):
 class WorkerView(GenericAPIView):
     permission_classes=[IsAuthority]
     serializer_class=WorkerSerializer
-    queryset=Users.objects.filter(is_staff=True).select_related('worker').all()
+    queryset=Users.objects.filter(Q(is_staff=True) & Q(is_verified=True)).select_related('worker').all()
     def get(self,request):
         worker_id=request.data.get('worker_id')
         search_param=request.data.get('search')

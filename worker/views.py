@@ -31,11 +31,6 @@ class WorkerSignUpView(GenericAPIView):
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    def get(self,request:Request):
-        content={
-            'message':'It is for Worker signup only POST request is allowed'
-        }
-        return Response(data=content,status=status.HTTP_200_OK)
     
 class WorkerVerifyotp(APIView):
     serializer_class=VerifyAccountSerializer

@@ -10,7 +10,8 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str,force_str,smart_bytes,DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode,urlsafe_base64_encode
 from rest_framework.exceptions import AuthenticationFailed
-
+from Authority.models import Job_Category
+from Worker.models import Worker_details
 
 class PhoneValidator(RegexValidator):
     regex = r'^\+?[1-9]\d{9}$'
@@ -115,3 +116,36 @@ class SetNewPasswordSerializer(serializers.ModelSerializer):
             return (user)
         except Exception as e:
             raise AuthenticationFailed('The reset link is invalid',401)
+
+class JobCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job_Category
+        fields = ['category']
+
+class WorkerListSerializer(serializers.ModelSerializer):
+    category = JobCategorySerializer(source='worker.category')
+    experience=serializers.SerializerMethodField()
+    charge=serializers.SerializerMethodField()
+    phone_number=serializers.SerializerMethodField()
+
+    def get_experience(self,obj):
+        try:
+            exp_detail=Worker_details.objects.get(worker=obj.id)
+            return exp_detail.experience
+        except Worker_details.DoesNotExist:
+            return None
+    def get_charge(self,obj):
+        try:
+            cha_detail=Worker_details.objects.get(worker=obj.id)
+            return cha_detail.charge
+        except Worker_details.DoesNotExist:
+            return None
+    def get_phone_number(self,obj):
+        try:
+            ph_detail=Worker_details.objects.get(worker=obj.id)
+            return ph_detail.phone_number
+        except Worker_details.DoesNotExist:
+            return None
+    class Meta:
+        model=Users
+        fields=['id','username','email','category','experience','charge','phone_number']
