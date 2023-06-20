@@ -1,47 +1,13 @@
-# Download the helper library from https://www.twilio.com/docs/python/install
-import random
-from twilio.rest import Client
-from Authority.models import Users
-from decouple import config
+import requests
 
+url='https://www.fast2sms.com/dev/bulkV2'
+message='Your otp for LaborSpot is'
+numbers=+919645610883
+payload=f'sender_id=TXTIND&message={message}&route=v3&language=english&numbers={numbers}'
+headers={
+    'authorization': "wtDopSlBIrm0GAZEPyse51bUNvzda6uTi2hknJfxFq437XHYcQDzKAef56E1R8IkqZCbht2xjipyu79v",
+    'Content-Type': "application/x-www-form-urlencoded"
+}
 
-# Find your Account SID and Auth Token at twilio.com/console
-# and set the environment variables. See http://twil.io/secure
-def send_sms(phone,mail):
-    account_sid = config('account_sid')
-    auth_token = config('auth_token')
-    client = Client(account_sid, auth_token)
-    otp=random.randint(1000,9999)
-    phone_number='+91'+phone
-    try:
-        user=Users.objects.get(is_staff=True,email=mail)
-        user.otp=otp
-        user.save()
-    except Exception as e:
-        raise e
-
-    message = client.messages.create(body=f"You verification code for LaborSpot is {otp}",from_='+14066938441',to=phone_number)
-
-    print(message.sid)
-    print('message send successfully')
-
-def forgot_sms(phone,mail):
-    account_sid = config('account_sid')
-    auth_token = config('auth_token')
-    client = Client(account_sid, auth_token)
-    otp=random.randint(1000,9999)
-    phone_number='+91'+phone
-    try:
-        user=Users.objects.get(is_staff=True,email=mail)
-        user.otp=otp
-        user.save()
-    except Exception as e:
-        raise e
-
-    message = client.messages.create(
-        body=f"You verification code for changing the password is {otp}",
-        from_='+14066938441',to=phone_number
-    )
-
-    print(message.sid)
-    print('message send successfully')
+response = requests.request("POST", url, data=payload, headers=headers)
+print(response.text)

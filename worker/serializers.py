@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from django.db import transaction
 from rest_framework.exceptions import AuthenticationFailed
-from .send_sms import forgot_sms
+# from .send_sms import forgot_sms
 
 class PhoneValidator(RegexValidator):
     regex = r'^\+?[1-9]\d{9}$'
@@ -107,7 +107,7 @@ class ForgotPasswordSerializer(serializers.ModelSerializer):
             worker=Worker_details.objects.get(phone_number=phone_number)
             user = worker.worker
             mail=user.email
-            forgot_sms(phone_number,mail)
+            # forgot_sms(phone_number,mail)
         except Worker_details.DoesNotExist:
             raise AuthenticationFailed('Worker with the provided phone number doest not exist')
         return user

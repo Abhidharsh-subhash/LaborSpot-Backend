@@ -149,3 +149,32 @@ class WorkerListSerializer(serializers.ModelSerializer):
     class Meta:
         model=Users
         fields=['id','username','email','category','experience','charge','phone_number']
+
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User_details
+#         fields = ['phone_number', 'photo']
+
+# class UserProfileSerializer(serializers.Serializer):
+#     user_details = UserSerializer('user_details')
+#     class Meta:
+#         model = Users
+#         fields = ['id', 'username', 'email', 'user_details']
+class UserProfileSerializer(serializers.ModelSerializer):
+    phone_number=serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
+    def get_phone_number(self,obj):
+        try:
+            detail=User_details.objects.get(user=obj.id)
+            return detail.phone_number
+        except User_details.DoesNotExist:
+            return None
+    def get_photo(self,obj):
+        try:
+            detail=User_details.objects.get(user=obj.id)
+            return detail.photo.url
+        except User_details.DoesNotExist:
+            return None
+    class Meta:
+        model = Users
+        fields = ['id','username','email','phone_number','photo']

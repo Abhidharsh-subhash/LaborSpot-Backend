@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
-from.serializers import SignUpSerializer,UserLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer
+from.serializers import SignUpSerializer,UserLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -189,3 +189,11 @@ class WorkerList(GenericAPIView):
             worker=get_object_or_404(self.get_queryset(),id=worker_id)
             serializer=self.serializer_class(worker)
             return Response(data=serializer.data,status=status.HTTP_200_OK)
+
+class UserProfileView(APIView):
+    permission_classes = [IsUser]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data)
