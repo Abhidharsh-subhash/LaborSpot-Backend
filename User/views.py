@@ -97,6 +97,15 @@ class UserLoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user=serializer.validated_data['user']
         tokens=RefreshToken.for_user(user)
+        # response = Response(
+        #     {
+        #         'status': 200,
+        #         'message': 'User login successful',
+        #         'access': str(tokens.access_token),
+        #         'refresh': str(tokens)
+        #     },
+        #     status=status.HTTP_200_OK
+        # )
         response={
             'status':200,
             'message':'User login successful',
@@ -104,6 +113,10 @@ class UserLoginView(APIView):
             'refresh':str(tokens)
         }
         return Response(data=response,status=status.HTTP_200_OK)
+        # Set the cookies
+        # response.set_cookie('access_token', tokens.access_token)
+        # response.set_cookie('refresh_token', str(tokens))
+        # return response
     
 class ForgotPasswordEmail(GenericAPIView):
     serializer_class=ForgotPasswordSerializer
@@ -206,7 +219,7 @@ class UserProfileView(APIView):
             serializer.save()
             response={
                 'status' : 200,
-                'message':'Details updated successfully'
+                'message':'Your profile updated successfully'
             }
             return Response(data=response,status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -117,9 +117,20 @@ class VerifyForgototp(GenericAPIView):
     pass
 
 class WorkerProfile(APIView):
-    permission_classes = [IsWorker]
-
+    # permission_classes = [IsWorker]
+    serializer_class=WorkerProfileSerializer
     def get(self, request):
         user = request.user
-        serializer = WorkerProfileSerializer(user)
+        serializer = self.serializer_class(user)
         return Response(serializer.data)
+    def patch(self, request):
+        user = request.user
+        serializer = self.serializer_class(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            response={
+                'status' : 200,
+                'message':'Your profile updated successfully'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

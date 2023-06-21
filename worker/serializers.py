@@ -120,29 +120,38 @@ class JobCategorySerializer(serializers.ModelSerializer):
         model=Job_Category
         fields=['category']
 
+class WorkerDerialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Worker_details
+        fields = ['experience','charge','photo']
+
 class WorkerProfileSerializer(serializers.ModelSerializer):
+    worker_details=WorkerDerialSerializer(required=True,source='worker')
     category = JobCategorySerializer(source='worker.category')
-    experience=serializers.SerializerMethodField()
-    charge=serializers.SerializerMethodField()
-    phone_number=serializers.SerializerMethodField()
+    # experience=serializers.SerializerMethodField()
+    # charge=serializers.SerializerMethodField()
+    # phone_number=serializers.SerializerMethodField()
     def get_experience(self,obj):
         try:
-            exp_detail=Worker_details.objects.get(worker=obj.id)
-            return exp_detail.experience
+            # exp_detail=Worker_details.objects.get(worker=obj.id)
+            exp_detail=obj.worker.experience
+            return exp_detail
         except Worker_details.DoesNotExist:
             return None
     def get_charge(self,obj):
         try:
-            cha_detail=Worker_details.objects.get(worker=obj.id)
-            return cha_detail.charge
+            # cha_detail=Worker_details.objects.get(worker=obj.id)
+            cha_detail=obj.worker.charge
+            return cha_detail
         except Worker_details.DoesNotExist:
             return None
     def get_phone_number(self,obj):
         try:
-            ph_detail=Worker_details.objects.get(worker=obj.id)
-            return ph_detail.phone_number
+            # ph_detail=Worker_details.objects.get(worker=obj.id)
+            ph_detail=obj.worker.phone_number
+            return ph_detail
         except Worker_details.DoesNotExist:
             return None
     class Meta:
         model=Users
-        fields=['username','email','category','experience','charge','phone_number']
+        fields=['username','email','category','worker_details']
