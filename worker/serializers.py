@@ -114,4 +114,35 @@ class ForgotPasswordSerializer(serializers.ModelSerializer):
 
 class VerifyForgot(serializers.ModelSerializer):
     pass
-        
+
+class JobCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Job_Category
+        fields=['category']
+
+class WorkerProfileSerializer(serializers.ModelSerializer):
+    category = JobCategorySerializer(source='worker.category')
+    experience=serializers.SerializerMethodField()
+    charge=serializers.SerializerMethodField()
+    phone_number=serializers.SerializerMethodField()
+    def get_experience(self,obj):
+        try:
+            exp_detail=Worker_details.objects.get(worker=obj.id)
+            return exp_detail.experience
+        except Worker_details.DoesNotExist:
+            return None
+    def get_charge(self,obj):
+        try:
+            cha_detail=Worker_details.objects.get(worker=obj.id)
+            return cha_detail.charge
+        except Worker_details.DoesNotExist:
+            return None
+    def get_phone_number(self,obj):
+        try:
+            ph_detail=Worker_details.objects.get(worker=obj.id)
+            return ph_detail.phone_number
+        except Worker_details.DoesNotExist:
+            return None
+    class Meta:
+        model=Users
+        fields=['username','email','category','experience','charge','phone_number']

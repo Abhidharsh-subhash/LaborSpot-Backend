@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer
+from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import APIException
 from Authority.models import Users
 from .models import Worker_details
+from .permissions import IsWorker
 
 # Create your views here.
 
@@ -115,3 +116,10 @@ class ForgotPassword(GenericAPIView):
 class VerifyForgototp(GenericAPIView):
     pass
 
+class WorkerProfile(APIView):
+    permission_classes = [IsWorker]
+
+    def get(self, request):
+        user = request.user
+        serializer = WorkerProfileSerializer(user)
+        return Response(serializer.data)

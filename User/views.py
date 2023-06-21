@@ -134,7 +134,9 @@ class ForgotPasswordEmail(GenericAPIView):
         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordTokenCheck(GenericAPIView):
-    def get(self,request,uidb64,token):
+    def get(self,request):
+        uidb64 = request.data.get('uidb64')
+        token = request.data.get('token')
         try:
             id=smart_str(urlsafe_base64_decode(uidb64))
             user=Users.objects.get(id=id)
@@ -192,8 +194,19 @@ class WorkerList(GenericAPIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsUser]
-
+    serializer_class=UserProfileSerializer
     def get(self, request):
         user = request.user
-        serializer = UserProfileSerializer(user)
+        serializer = self.serializer_class(user)
         return Response(serializer.data)
+    def patch(self, request):
+        user = request.user
+        serializer = self.serializer_class(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            response={
+                'status' : 200,
+                'message':'Details updated successfully'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
