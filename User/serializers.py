@@ -176,3 +176,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ['username','email','phone_number','photo','user_details']
+
+class UserPrivacySerializer(serializers.ModelSerializer):
+    password=serializers.CharField(style={'input-type':'password'})
+    new_password=serializers.CharField(style={'input-type':'password'})
+    confirm_password=serializers.CharField(style={'input-type':'password'})
+    def validate(self, attrs):
+        new_password=attrs.get('new_password')
+        confirm_password=attrs.get('confirm_password')
+        if new_password != confirm_password:
+            raise serializers.ValidationError('The new password and confirm passowrd are not matching')
+        return attrs
+    class Meta:
+        model = Users
+        fields = ['password','new_password','confirm_password']

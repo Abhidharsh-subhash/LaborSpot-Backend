@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer
+from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,WorkerPrivacySerializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from rest_framework.exceptions import APIException
 from Authority.models import Users
 from .models import Worker_details
 from .permissions import IsWorker
+from django.contrib.auth.hashers import check_password
 
 # Create your views here.
 
@@ -134,3 +135,37 @@ class WorkerProfile(APIView):
             }
             return Response(data=response,status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class WorkerPrivacy(GenericAPIView):
+    permission_classes=[IsWorker]
+    serializer_class=WorkerPrivacySerializer
+    def patch(self,request):
+        worker=request.user
+        serializer=self.serializer_class(worker,data=request.data)
+        if serializer.is_valid():
+            current_password=serializer.validated_data.get('password')
+            if check_password(current_password,worker.password):
+                new_password=serializer.validated_data.get('new_password')
+                confirm_password=serializer.validated_data.get('confirm_password')
+                if new_password == confirm_password:
+                    worker.set_password(new_password)
+                    worker.save()
+                    response={
+                        'status':200,
+                        'message':'Your Password Updated successfully'
+                    }
+                    return Response(data=response,status=status.HTTP_200_OK)
+                else:
+                    response={
+                        'status':400,
+                        'message':'New password and confirm password are not matching'
+                    }
+                    return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+            else:
+                response={
+                    'status':400,
+                    'message':'You have provided the wrong password'
+                }
+                return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)

@@ -10,4 +10,5 @@ urlpatterns = [
     path('password-reset-complete/',views.SetNewPassword.as_view(),name='password-reset-complete'),
     path('user-home/',views.WorkerList.as_view(),name='user-home'),
     path('profile/',views.UserProfileView.as_view(),name='profile'),
+    path('privacy/',views.UserPrivacy.as_view(),name='privacy'),
 ]
