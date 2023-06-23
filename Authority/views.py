@@ -15,7 +15,6 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from .permissions import IsAuthority
 from drf_yasg.utils import swagger_auto_schema
-from .token_handling import CustomJWTAuthentication
 from django.db.models import Q
 
 # Create your views here.
@@ -128,7 +127,6 @@ class CategoryView(GenericAPIView):
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 class UserView(GenericAPIView):
-    authentication_classes=[CustomJWTAuthentication]
     permission_classes=[IsAuthority]
     serializer_class=UserSerializer
     queryset=Users.objects.filter(is_user=1,is_verified=True).select_related('user').all()
