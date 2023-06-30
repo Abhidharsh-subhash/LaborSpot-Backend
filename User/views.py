@@ -195,7 +195,7 @@ class WorkerList(GenericAPIView):
         worker_id=request.data.get('worker_id')
         search_param=request.data.get('search')
         if search_param:
-            workers=self.queryset.filter(username__icontains=search_param)
+            workers=self.queryset.filter(Q(username__icontains=search_param) | Q(worker__category__category__icontains=search_param))
             serializer=self.serializer_class(workers,many=True)
             return Response(data=serializer.data,status=status.HTTP_200_OK)
         if worker_id is None:
