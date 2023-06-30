@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-# from .send_sms import send_sms
+from .send_sms import send_sms
 from rest_framework.exceptions import APIException
 from Authority.models import Users
 from .models import Worker_details
@@ -23,8 +23,7 @@ class WorkerSignUpView(GenericAPIView):
         if serializer.is_valid():
             serializer.save()
             try:
-                pass
-                # send_sms(data['Worker_details.phone_number'],data['email'])
+                send_sms(data['Worker_details.phone_number'],data['email'])
             except:
                 serializer.instance.delete()
                 raise APIException('Failed to send otp to your phone. Register again')

@@ -76,15 +76,24 @@ class CategoryView(GenericAPIView):
     queryset=Job_Category.objects.all()
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             category=serializer.validated_data['category']
-            cat=Job_Category(category=category)
-            cat.save()
-            response={
-                'status':201,
-                'message':'New category added successfully'
-            }
-            return Response(data=response,status=status.HTTP_201_CREATED)
+            category_lower = category.lower() # Convert input category to lowercase
+            # Check if category already exists (case-insensitive)
+            if self.queryset.filter(category__iexact=category_lower).exists():
+                response={
+                    'status':400,
+                    'message':'Category already exists'
+                }
+                return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+            else:
+                cat=Job_Category(category=category)
+                cat.save()
+                response={
+                    'status':201,
+                    'message':'New category added successfully'
+                }
+                return Response(data=response,status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     def get(self,request):

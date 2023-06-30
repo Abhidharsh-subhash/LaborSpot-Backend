@@ -1,13 +1,24 @@
 import requests
+import random
+from Authority.models import Users 
+from decouple import config
 
-url='https://www.fast2sms.com/dev/bulkV2'
-message='Your otp for LaborSpot is'
-numbers=+919645610883
-payload=f'sender_id=TXTIND&message={message}&route=v3&language=english&numbers={numbers}'
-headers={
-    'authorization': "wtDopSlBIrm0GAZEPyse51bUNvzda6uTi2hknJfxFq437XHYcQDzKAef56E1R8IkqZCbht2xjipyu79v",
-    'Content-Type': "application/x-www-form-urlencoded"
-}
-
-response = requests.request("POST", url, data=payload, headers=headers)
-print(response.text)
+def send_sms(phone,email):
+    otp_sent = random.randint(1001, 9999)
+    try:
+        worker=Users.objects.get(is_staff=True,email=email)
+        worker.otp=otp_sent
+        worker.save()
+    except:
+        raise Exception('User not found')
+    url = 'https://www.fast2sms.com/dev/bulkV2'
+    payload = f'variables_values={otp_sent}&route=otp&numbers={phone}'
+    authorization_token = config('AUTHORIZATION_TOKEN')
+    headers = {
+        'authorization': authorization_token,
+        'Content-Type': "application/x-www-form-urlencoded",
+        'Cache-Control': "no-cache",
+        }
+    print(otp_sent)
+    response = requests.request("POST", url, data=payload, headers=headers)
+    print(response.text)
