@@ -1,3 +1,4 @@
+from datetime import date,datetime
 from Authority.models import Users
 from rest_framework.validators import ValidationError
 from rest_framework import serializers
@@ -10,7 +11,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str,force_str,smart_bytes,DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode,urlsafe_base64_encode
 from rest_framework.exceptions import AuthenticationFailed
-from Authority.models import Job_Category
+from Authority.models import Job_Category,Booking
 from Worker.models import Worker_details
 
 class PhoneValidator(RegexValidator):
@@ -190,3 +191,25 @@ class UserPrivacySerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ['password','new_password','confirm_password']
+
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['user','worker', 'date', 'time_from', 'time_to','location', 'contact_information', 'instructions']
+
+    def validate(self, data):
+        # Validate the 'date' field
+        if 'date' in data:
+            today = date.today()
+            value = data['date']
+            value = datetime.strptime(value, '%Y-%m-%d').date()  # Convert string to date object
+            if value <= today:
+                raise serializers.ValidationError("Date must be from tomorrow onwards.")
+            data['date'] = value
+        # Validate the time range
+        if 'time_from' in data and 'time_to' in data:
+            time_from = data['time_from']
+            time_to = data['time_to']
+            if time_from >= time_to:
+                raise serializers.ValidationError("Invalid time range. 'time_from' should be before 'time_to'.")
+        return data

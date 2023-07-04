@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
-from.serializers import SignUpSerializer,UserLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer
+from.serializers import SignUpSerializer,UserLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -12,7 +12,7 @@ from rest_framework.exceptions import APIException
 # from django.core.mail import send_mail
 import random
 from django.conf import settings
-from Authority.models import Users
+from Authority.models import Users,Booking
 from .emails import send_otp_via_mail,forgot_send_mail
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str,force_str,smart_bytes,DjangoUnicodeDecodeError
@@ -23,6 +23,7 @@ from django.shortcuts import get_object_or_404
 from .permissions import IsUser
 from django.db.models import Q
 from django.contrib.auth.hashers import check_password
+from datetime import date
 
 # Create your views here.
 
@@ -194,13 +195,23 @@ class WorkerList(GenericAPIView):
     def get(self,request):
         worker_id=request.data.get('worker_id')
         search_param=request.data.get('search')
+        category_id = request.data.get('category_id')
         if search_param:
             workers=self.queryset.filter(Q(username__icontains=search_param) | Q(worker__category__category__icontains=search_param))
+            if category_id:  # Apply additional category filtering
+                workers = workers.filter(worker__category__id=category_id)
             serializer=self.serializer_class(workers,many=True)
             return Response(data=serializer.data,status=status.HTTP_200_OK)
-        if worker_id is None:
-            serializer=self.serializer_class(self.get_queryset(),many=True)
+        elif worker_id is None:
+            queryset=self.get_queryset()
+            if category_id:  # Apply category filtering
+                queryset = queryset.filter(worker__category__id=category_id)
+            serializer=self.serializer_class(queryset,many=True)
             return Response(data=serializer.data,status=status.HTTP_200_OK)
+        elif category_id:
+            workers = self.queryset.filter(worker__category__id=category_id)
+            serializer = self.serializer_class(workers, many=True)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
         else:
             worker=get_object_or_404(self.get_queryset(),id=worker_id)
             serializer=self.serializer_class(worker)
@@ -259,3 +270,35 @@ class UserPrivacy(GenericAPIView):
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+class WorkerBooking(GenericAPIView):
+    serializer_class=BookingSerializer
+    def get_fields(self):
+        fields = super().get_fields()
+        fields.pop('user')
+        return fields
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    def post(self, request):
+        worker = request.data.get('worker')
+        try:
+            worker = Users.objects.get(id=worker)
+        except Users.DoesNotExist:
+            return Response({"error": "Invalid worker ID."}, status=status.HTTP_400_BAD_REQUEST)
+        booking_data = {
+            'user': request.user,
+            'worker': worker,
+            'date': request.data.get('date'),
+            'time_from': request.data.get('time_from'),
+            'time_to': request.data.get('time_to'),
+            'location': request.data.get('location'),
+            'contact_information': request.data.get('contact_information'),
+            'instructions': request.data.get('instructions'),
+        }
+        # Serialize the booking data
+        breakpoint()
+        serializer = self.serializer_class(data=booking_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

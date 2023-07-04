@@ -47,18 +47,28 @@ class Users(AbstractUser):
 
     def __str__(self):
         return self.email
-    # def is_valid(self) -> bool:
-    #     """10 mins OTP validation"""
-    #     lifespan_in_seconds = float(settings.OTP_EXPIRE_TIME * 60)
-    #     now = datetime.now(timezone.utc)
-    #     time_diff = now - self.created_at
-    #     time_diff = time_diff.total_seconds()
-    #     if time_diff >= lifespan_in_seconds:
-    #         return False
-    #     return True
     
 class Job_Category(models.Model):
     category=models.CharField(max_length=30)
 
     def __str__(self):
         return self.category
+
+class Booking(models.Model):
+    user = models.ForeignKey(Users,on_delete=models.CASCADE,related_name='booked_user')
+    worker = models.ForeignKey(Users,on_delete=models.CASCADE,related_name='worker_booked')
+    date = models.DateField()
+    time_from = models.TimeField()
+    time_to = models.TimeField()
+    payment_amount = models.IntegerField()
+    payment_status = models.CharField(max_length=30,default='pending')
+    location = models.CharField(max_length=30)
+    contact_information = models.CharField(max_length=100)
+    instructions = models.CharField(max_length=100)
+    status = models.CharField(max_length=20,default='pending')
+    cancellation_reason = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Booking #{self.id} - Order Status: {self.status}, Payment Status: {self.payment_status}"
