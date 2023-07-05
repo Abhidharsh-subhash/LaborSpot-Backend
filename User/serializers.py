@@ -195,13 +195,14 @@ class UserPrivacySerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['user','worker', 'date', 'time_from', 'time_to','location', 'contact_information', 'instructions']
+        fields = ['user','worker', 'date', 'time_from', 'time_to','location', 'contact_information', 'instructions','payment_amount']
 
     def validate(self, data):
         # Validate the 'date' field
         if 'date' in data:
             today = date.today()
             value = data['date']
+            value = value.strftime('%Y-%m-%d')  # Convert date object to string
             value = datetime.strptime(value, '%Y-%m-%d').date()  # Convert string to date object
             if value <= today:
                 raise serializers.ValidationError("Date must be from tomorrow onwards.")

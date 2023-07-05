@@ -23,7 +23,8 @@ from django.shortcuts import get_object_or_404
 from .permissions import IsUser
 from django.db.models import Q
 from django.contrib.auth.hashers import check_password
-from datetime import date
+from datetime import datetime
+from Worker.models import Worker_details
 
 # Create your views here.
 
@@ -272,6 +273,7 @@ class UserPrivacy(GenericAPIView):
             return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 class WorkerBooking(GenericAPIView):
+    permission_classes=[IsUser]
     serializer_class=BookingSerializer
     def get_fields(self):
         fields = super().get_fields()
@@ -284,21 +286,46 @@ class WorkerBooking(GenericAPIView):
         try:
             worker = Users.objects.get(id=worker)
         except Users.DoesNotExist:
-            return Response({"error": "Invalid worker ID."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid worker."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user=Worker_details.objects.get(worker=worker.id)
+            amount=user.charge
+        except Users.DoesNotExist:
+            return Response({"error": "Invalid worker."}, status=status.HTTP_400_BAD_REQUEST)
+        time_from=request.data['time_from']
+        time_to=request.data['time_to']
+        time_from = datetime.strptime(time_from, "%H:%M").time()
+        time_to = datetime.strptime(time_to, "%H:%M").time()
+        datetime_from = datetime.combine(datetime.today(), time_from)
+        datetime_to = datetime.combine(datetime.today(), time_to)
+        duration = datetime_to - datetime_from
+        duration_hours = duration.total_seconds() / 3600
+        cost=int(amount*duration_hours)
         booking_data = {
-            'user': request.user,
-            'worker': worker,
+            'user': request.user.id,
+            'worker': worker.id,
             'date': request.data.get('date'),
             'time_from': request.data.get('time_from'),
             'time_to': request.data.get('time_to'),
+            'payment_amount':cost,
             'location': request.data.get('location'),
             'contact_information': request.data.get('contact_information'),
             'instructions': request.data.get('instructions'),
         }
         # Serialize the booking data
-        breakpoint()
         serializer = self.serializer_class(data=booking_data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid(raise_exception=True):
+            self.perform_create(serializer)
+            response={
+                'status':201,
+                'message':"Worker booked successfull",
+                'wage of the worker':cost
+            }
+            # return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(data=response, status=status.HTTP_201_CREATED)
+        else:
+            response={
+                'status':400,
+                'message':'Something went wrong. please try again'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
