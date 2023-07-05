@@ -8,4 +8,5 @@ urlpatterns= [
     path('forgot-password/',views.ForgotPassword.as_view(),name='forgot-password'),
     path('profile/',views.WorkerProfile.as_view(),name='profile'),
     path('privacy/',views.WorkerPrivacy.as_view(),name='privacy'),
+    path('bookings/',views.WorkRequests.as_view(),name='bookings'),
 ]

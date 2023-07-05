@@ -90,7 +90,7 @@ SWAGGER_SETTINGS = {
 
 #this we will use only for configuring the jwt token
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=160),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
     #by making it true while we paste refresh token in the refresh url it will return access and refresh token
     "ROTATE_REFRESH_TOKENS": True,

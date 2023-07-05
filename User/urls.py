@@ -12,4 +12,5 @@ urlpatterns = [
     path('profile/',views.UserProfileView.as_view(),name='profile'),
     path('privacy/',views.UserPrivacy.as_view(),name='privacy'),
     path('booking/',views.WorkerBooking.as_view(),name='booking'),
+    path('booking-history/',views.BookingHistory.as_view(),name='booking-history'),
 ]

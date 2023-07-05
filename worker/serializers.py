@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from django.db import transaction
 from rest_framework.exceptions import AuthenticationFailed
+from Authority.models import Booking
+from User.models import Users
 # from .send_sms import forgot_sms
 
 class PhoneValidator(RegexValidator):
@@ -169,3 +171,15 @@ class WorkerPrivacySerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ['password','new_password','confirm_password']
+
+class BookingSerializer(serializers.ModelSerializer):
+    username=serializers.SerializerMethodField()
+    def get_username(self,obj):
+        try:
+            user=Users.objects.get(pk=obj.user.id)
+            return user.username
+        except Users.DoesNotExist:
+            return None
+    class Meta:
+        model = Booking
+        fields = ['id','username','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions']

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,WorkerPrivacySerializer
+from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,BookingSerializer,WorkerPrivacySerializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -12,6 +12,7 @@ from Authority.models import Users
 from .models import Worker_details
 from .permissions import IsWorker
 from django.contrib.auth.hashers import check_password
+from Authority.models import Booking
 
 # Create your views here.
 
@@ -168,3 +169,70 @@ class WorkerPrivacy(GenericAPIView):
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+class WorkRequests(GenericAPIView):
+    permission_classes=[IsWorker]
+    serializer_class=BookingSerializer
+    def get(self,request):
+        status=request.data.get('status')
+        if status is not None:
+            worker=request.user.id
+            bookings=Booking.objects.filter(worker=worker,status=status)
+            if not bookings:
+                response={
+                    'status':404,
+                    'message':'Not found'
+                }
+                return Response(data=response)
+            serializer=self.serializer_class(bookings,many=True)
+            return Response(data=serializer.data)
+        else:
+            response={
+                'status':400,
+                'message':'Please provide the status to be filtered'
+            }
+            return Response(data=response)
+    def patch(self,request):
+        booking_id=request.data.get('booking_id')
+        status=request.data.get('status')
+        try:
+            booking=Booking.objects.get(id=booking_id,status='pending')
+        except Booking.DoesNotExist:
+            response={
+                'status':400,
+                'message':'Incorrect booking or Requested booking cant perform this action'
+            }
+            return Response(data=response)
+        if status == 'accept':
+            booking.status='accepted'
+            booking.save()
+            response={
+            'status':201,
+            'message':'Work accepted successfully'
+            }
+            return Response(data=response)
+        elif status == 'reject':
+            reason=request.data.get('reason')
+            if reason is not None:
+                booking.cancellation_reason=reason
+                booking.payment_status='cancelled'
+                booking.status='rejected'
+                booking.save()
+                response={
+                'status':201,
+                'message':'Work rejected successfully'
+                }
+                return Response(data=response)
+            else:
+                response={
+                    'status':400,
+                    'message':'Please provide the reason to reject the booking'
+                }
+                return Response(data=response)
+        else:
+            response={
+                'status':400,
+                'message':'Please provide a valid status'
+            }
+            return Response(data=response)
+        

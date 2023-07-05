@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
-from.serializers import SignUpSerializer,UserLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
+from.serializers import SignUpSerializer,UserLoginSerializer,BookingHistorySerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -327,5 +327,45 @@ class WorkerBooking(GenericAPIView):
             response={
                 'status':400,
                 'message':'Something went wrong. please try again'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
+class BookingHistory(GenericAPIView):
+    permission_classes=[IsUser]
+    serializer_class=BookingHistorySerializer
+    def get(self,request):
+        user=request.user.id
+        status=request.data.get('status')
+        if status is not None:
+            bookings=Booking.objects.filter(user=user,status=status)
+        else:
+            bookings=Booking.objects.filter(user=user)
+        serializer=self.serializer_class(bookings,many=True)
+        return Response(data=serializer.data)
+    def post(self,request):
+        user=request.user.id
+        booking_id=request.data.get('booking_id')
+        reason=request.data.get('reason')
+        try:
+            booking=Booking.objects.get(user=user,pk=booking_id,status='pending')
+        except Booking.DoesNotExist:
+            response={
+                'status':404,
+                'message':'Booking not found or cannot be cancelled.'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        if reason is not None:
+            booking.status='cancelled'
+            booking.cancellation_reason=reason
+            booking.save()
+            response={
+                'status':200,
+                'message':'Booking has been cancelled successfully.'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
+            response={
+                'status':400,
+                'message':'Please provide the reason for cancellation'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)

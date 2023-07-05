@@ -214,3 +214,15 @@ class BookingSerializer(serializers.ModelSerializer):
             if time_from >= time_to:
                 raise serializers.ValidationError("Invalid time range. 'time_from' should be before 'time_to'.")
         return data
+    
+class BookingHistorySerializer(serializers.ModelSerializer):
+    workername=serializers.SerializerMethodField()
+    def get_workername(self,obj):
+        try:
+            user=Users.objects.get(pk=obj.user.id)
+            return user.username
+        except Users.DoesNotExist():
+            return None
+    class Meta:
+        model = Booking
+        fields = ['id','workername','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','cancellation_reason']
