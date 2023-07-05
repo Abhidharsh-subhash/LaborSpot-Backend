@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Users,Job_Category
+from .models import Users,Job_Category,Booking
 from User.models import User_details
 from Worker.models import Worker_details
 from django.core.validators import EmailValidator
@@ -41,16 +41,9 @@ class JobCategorySerializer(serializers.ModelSerializer):
 
 class WorkerSerializer(serializers.ModelSerializer):
     category = JobCategorySerializer(source='worker.category')
-    # category=serializers.SerializerMethodField()
     experience=serializers.SerializerMethodField()
     charge=serializers.SerializerMethodField()
     phone_number=serializers.SerializerMethodField()
-    # def get_category(self,obj):
-    #     try:
-    #         cat_detail=Worker_detials.objects.get(worker=obj.id)
-    #         return cat_detail.category
-    #     except Worker_detials.DoesNotExist:
-    #         return None
     def get_experience(self,obj):
         try:
             exp_detail=Worker_details.objects.get(worker=obj.id)
@@ -72,3 +65,22 @@ class WorkerSerializer(serializers.ModelSerializer):
     class Meta:
         model=Users
         fields=['id','username','email','is_active','category','experience','charge','phone_number']
+
+class BookingSerializer(serializers.ModelSerializer):
+    username=serializers.SerializerMethodField()
+    workername=serializers.SerializerMethodField()
+    def get_username(self,obj):
+        try:
+            user=Users.objects.get(pk=obj.user.id)
+            return user.username
+        except Exception:
+            return None
+    def get_workername(self,obj):
+        try:
+            worker=Users.objects.get(pk=obj.user.id)
+            return worker.username
+        except Exception:
+            return None
+    class Meta:
+        model = Booking
+        fields = ['id','username','workername','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','status','cancellation_reason']

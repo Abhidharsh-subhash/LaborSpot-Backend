@@ -11,4 +11,5 @@ urlpatterns = [
     path('BlockWorker/',views.BlockWorker.as_view(),name='BlockWorker'),
     path('UnblockWorker/',views.UnblockWorker.as_view(),name='UnblockWorker'),
     path('logout/',views.AuthorityLogoutView.as_view(),name='AuthorityLogoutView'),
+    path('bookings/',views.Bookings.as_view(),name='bookings'),
 ]

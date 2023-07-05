@@ -7,8 +7,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer,CategorySerializer,WorkerSerializer,LoginSerializer
-from .models import Users,Job_Category
+from .serializers import UserSerializer,CategorySerializer,WorkerSerializer,LoginSerializer,BookingSerializer
+from .models import Users,Job_Category,Booking
 from User.models import User_details
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import permission_classes
@@ -285,7 +285,35 @@ class UnblockWorker(GenericAPIView):
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
 
-
+class Bookings(GenericAPIView):
+    permission_classes=[IsAuthority]
+    serializer_class=BookingSerializer
+    def get(self,request):
+        status=request.data.get('status')
+        if status is not None:
+            booking=Booking.objects.filter(status=status)
+        else:
+            booking=Booking.objects.all()
+        if booking.exists():
+            serializer=self.serializer_class(booking,many=True)
+            return Response(data=serializer.data)
+        else:
+            response={
+                'status':200,
+                'message':'This is empty'
+            }
+            return Response(data=response)
+    def patch(self,request):
+        booking_id=request.data.get('booking_id')
+        try:
+            booking=Booking.objects.get(pk=booking_id)
+        except Exception:
+            response={
+                'status':404,
+                'message':'Booking not found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        
 
 
     
