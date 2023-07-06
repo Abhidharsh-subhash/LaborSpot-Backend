@@ -305,14 +305,44 @@ class Bookings(GenericAPIView):
             return Response(data=response)
     def patch(self,request):
         booking_id=request.data.get('booking_id')
+        reason=request.data.get('reason')
         try:
             booking=Booking.objects.get(pk=booking_id)
         except Exception:
             response={
                 'status':404,
-                'message':'Booking not found'
+                'message':'Booking not found.'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        if booking.status == 'terminated':
+            response={
+                'status':400,
+                'message':'Booking is already terminated'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        elif reason is not None and booking.status != 'completed':
+            booking.status='terminated'
+            booking.payment_status='cancelled'
+            booking.cancellation_reason=reason
+            booking.save()
+            response={
+                'status':200,
+                'message':'Booking terminated successfully.'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        elif reason is None:
+            response={
+                'status':400,
+                'message':'Please provide the reason for termination.'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        else:
+            response={
+                'status':400,
+                'message':'The booking status is completed so you cant terminate it.'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
         
 
 
