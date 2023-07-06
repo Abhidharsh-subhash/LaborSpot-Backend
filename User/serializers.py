@@ -225,4 +225,9 @@ class BookingHistorySerializer(serializers.ModelSerializer):
             return None
     class Meta:
         model = Booking
-        fields = ['id','workername','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','cancellation_reason']
+        fields = ['id','workername','status','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','cancellation_reason']
+
+class CompleteFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['status']

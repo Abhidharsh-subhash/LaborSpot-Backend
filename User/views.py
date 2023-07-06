@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
-from.serializers import SignUpSerializer,UserLoginSerializer,BookingHistorySerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
+from.serializers import SignUpSerializer,UserLoginSerializer,CompleteFeedbackSerializer,BookingHistorySerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -25,6 +25,8 @@ from django.db.models import Q
 from django.contrib.auth.hashers import check_password
 from datetime import datetime
 from Worker.models import Worker_details
+from datetime import date
+from datetime import datetime
 
 # Create your views here.
 
@@ -369,3 +371,50 @@ class BookingHistory(GenericAPIView):
                 'message':'Please provide the reason for cancellation'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+
+class CompleteFeedback(GenericAPIView):
+    permission_classes=[IsUser]
+    serializer_class=CompleteFeedbackSerializer
+    def patch(self,request):
+        booking_id=request.data.get('booking_id')
+        feedback=request.data.get('feedback')
+        try:
+            booking=Booking.objects.get(pk=booking_id)
+        except Booking.DoesNotExist:
+            response={
+                'status':400,
+                'message':'booking_id does not exist'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        if booking.status == 'accepted':
+            if feedback is None:
+                response={
+                    'status':400,
+                    'message':'Please provide the feedback before marking it as completed'
+                }
+                return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+            today=date.today()
+            current = datetime.now().strftime('%H:%M:%S')
+            current_time = datetime.strptime(current, '%H:%M:%S').time()
+            if (booking.date == today) and (current_time >= booking.time_to):
+                booking.status='completed'
+                booking.feedback=feedback
+                booking.save()
+                response={
+                    'status':200,
+                    'message':'Service completed successfully'
+                }
+                return Response(data=response,status=status.HTTP_200_OK)
+            else:
+                response={
+                    'status':400,
+                    'message':'You are trying to complete the wrong work'
+                }
+                return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        else:
+            response={
+                'status':400,
+                'message':'Having some problem related to booking'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+            
