@@ -55,6 +55,7 @@ class Job_Category(models.Model):
         return self.category
 
 class Booking(models.Model):
+    booking_id=models.CharField(max_length=10,null=False)
     user = models.ForeignKey(Users,on_delete=models.CASCADE,related_name='booked_user')
     worker = models.ForeignKey(Users,on_delete=models.CASCADE,related_name='worker_booked')
     date = models.DateField()

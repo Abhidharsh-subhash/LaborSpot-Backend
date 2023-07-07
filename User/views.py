@@ -27,7 +27,7 @@ from datetime import datetime
 from Worker.models import Worker_details
 from datetime import date
 from datetime import datetime
-
+import string,secrets
 # Create your views here.
 
 class UserSignUpView(GenericAPIView):
@@ -277,12 +277,24 @@ class UserPrivacy(GenericAPIView):
 class WorkerBooking(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=BookingSerializer
+    # this method is overridden to remove the 'user' field from the fields dictionary
     def get_fields(self):
         fields = super().get_fields()
         fields.pop('user')
         return fields
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+    #method for generating the custom booking number
+    def generate_booking_id(self):
+        alphabet = string.ascii_letters + string.digits
+        code_length = 10
+        while True:
+            booking_id = ''.join(secrets.choice(alphabet) for _ in range(code_length))
+            # Check if the generated booking ID already exists in the database
+            if not Booking.objects.filter(booking_id=booking_id).exists():
+                return booking_id
+            else:
+                self.generate_booking_id()
     def post(self, request):
         worker = request.data.get('worker')
         try:
@@ -303,7 +315,9 @@ class WorkerBooking(GenericAPIView):
         duration = datetime_to - datetime_from
         duration_hours = duration.total_seconds() / 3600
         cost=int(amount*duration_hours)
+        booking_number=self.generate_booking_id()
         booking_data = {
+            'booking_id':booking_number,
             'user': request.user.id,
             'worker': worker.id,
             'date': request.data.get('date'),
@@ -321,7 +335,8 @@ class WorkerBooking(GenericAPIView):
             response={
                 'status':201,
                 'message':"Worker booked successfull",
-                'wage of the worker':cost
+                'wage of the worker':cost,
+                'Booking id':booking_number
             }
             # return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(data=response, status=status.HTTP_201_CREATED)

@@ -195,7 +195,7 @@ class UserPrivacySerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['user','worker', 'date', 'time_from', 'time_to','location', 'contact_information', 'instructions','payment_amount']
+        fields = ['booking_id','user','worker', 'date', 'time_from', 'time_to','location', 'contact_information', 'instructions','payment_amount']
 
     def validate(self, data):
         # Validate the 'date' field
@@ -225,7 +225,7 @@ class BookingHistorySerializer(serializers.ModelSerializer):
             return None
     class Meta:
         model = Booking
-        fields = ['id','workername','status','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','cancellation_reason']
+        fields = ['id','workername','status','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','cancellation_reason','feedback']
 
 class CompleteFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
