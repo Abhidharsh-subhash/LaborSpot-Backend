@@ -118,7 +118,7 @@ class VerifyForgototp(GenericAPIView):
     pass
 
 class WorkerProfile(APIView):
-    # permission_classes = [IsWorker]
+    permission_classes = [IsWorker]
     serializer_class=WorkerProfileSerializer
     def get(self, request):
         user = request.user

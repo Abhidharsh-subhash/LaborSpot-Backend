@@ -128,7 +128,6 @@ class WorkerListSerializer(serializers.ModelSerializer):
     experience=serializers.SerializerMethodField()
     charge=serializers.SerializerMethodField()
     phone_number=serializers.SerializerMethodField()
-
     def get_experience(self,obj):
         try:
             exp_detail=Worker_details.objects.get(worker=obj.id)

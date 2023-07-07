@@ -61,6 +61,7 @@ class SignupSerializer(serializers.ModelSerializer):
         password=validated_data.pop('password')
         Worker_details_data=validated_data.pop('Worker_details')
         validated_data['is_staff']=True
+        user=None
         with transaction.atomic():
             try:
                 user=super(SignupSerializer,self).create(validated_data)
@@ -68,7 +69,8 @@ class SignupSerializer(serializers.ModelSerializer):
                 user.save()
                 Worker_details.objects.create(worker=user,**Worker_details_data)
             except Exception as e:
-                user.delete()
+                if user:
+                    user.delete()
                 raise e
         return user
 

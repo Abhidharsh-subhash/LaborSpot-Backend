@@ -23,10 +23,8 @@ from django.shortcuts import get_object_or_404
 from .permissions import IsUser
 from django.db.models import Q
 from django.contrib.auth.hashers import check_password
-from datetime import datetime
 from Worker.models import Worker_details
-from datetime import date
-from datetime import datetime
+from datetime import date,datetime,timedelta
 import string,secrets
 # Create your views here.
 
@@ -295,10 +293,41 @@ class WorkerBooking(GenericAPIView):
                 return booking_id
             else:
                 self.generate_booking_id()
+    def get_next_available_time(self, worker_id, start_time):
+        today = datetime.now().date()
+        current = start_time.date()
+        x=current.strftime('%Y-%m-%d')
+        current_day=datetime.strptime(x, '%Y-%m-%d').date()
+        current_time = start_time.time()
+
+        while current_day <= today:
+            now = datetime.now()
+            current_datetime = datetime.combine(current_day, current_time)
+            if current_day == today and current_datetime <= now:
+                # Skip past time that has already passed today
+                current_datetime = now + timedelta(minutes=30)
+            if current_datetime.time() >= datetime.strptime('08:00', '%H:%M').time():
+                # Check if the time slot is available
+                existing_bookings = Booking.objects.filter(
+                    worker_id=worker_id,
+                    date=current_day,
+                    time_to__gte=current_datetime.time()
+                )
+                if not existing_bookings.exists():
+                    return current_datetime
+            
+            # Increment the time by 30 minutes
+            current_time += timedelta(minutes=30)
+            if current_time >= datetime.strptime('23:30', '%H:%M').time():
+                # If the time exceeds 23:30, move to the next day
+                current_day += timedelta(days=1)
+                current_time = datetime.strptime('08:00', '%H:%M').time()
+
+        return None
     def post(self, request):
         worker = request.data.get('worker')
         try:
-            worker = Users.objects.get(id=worker)
+            worker = Users.objects.get(id=worker,is_staff=True)
         except Users.DoesNotExist:
             return Response({"error": "Invalid worker."}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -316,6 +345,33 @@ class WorkerBooking(GenericAPIView):
         duration_hours = duration.total_seconds() / 3600
         cost=int(amount*duration_hours)
         booking_number=self.generate_booking_id()
+         # Check if the user has any bookings at the requested time slot
+        existing_bookings = Booking.objects.filter(
+            user=request.user,
+            date=request.data.get('date'),
+            time_to__gte=datetime_from,
+            time_from__lte=datetime_to
+        )
+        # if existing_bookings.exists():
+        #     response={
+        #         'status':226,
+        #         'message':'Time slot is not available.Please try a different time for the worker that you are looking for.'
+        #     }
+        #     return Response(data=response, status=status.HTTP_226_IM_USED)
+        if existing_bookings.exists():
+            next_available_time = self.get_next_available_time(worker.id, datetime_from)
+            if next_available_time:
+                response = {
+                    'status': 226,
+                    'message': 'Time slot is not available. Next available time slot: {}'.format(next_available_time),
+                }
+            else:
+                response = {
+                    'status': 226,
+                    'message': 'Time slot is not available. No further available time slots.',
+                }
+            return Response(data=response, status=status.HTTP_226_IM_USED)
+
         booking_data = {
             'booking_id':booking_number,
             'user': request.user.id,
