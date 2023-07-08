@@ -84,3 +84,11 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ['id','username','workername','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','status','cancellation_reason']
+
+class PrivacySerializer(serializers.ModelSerializer):
+    password=serializers.CharField(style={'input-type':'password'})
+    new_password=serializers.CharField(style={'input-type':'password'})
+    confirm_password=serializers.CharField(style={'input-type':'password'})
+    class Meta:
+        model = Users
+        fields = ['password','new_password','confirm_password']

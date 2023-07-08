@@ -12,4 +12,5 @@ urlpatterns = [
     path('UnblockWorker/',views.UnblockWorker.as_view(),name='UnblockWorker'),
     path('logout/',views.AuthorityLogoutView.as_view(),name='AuthorityLogoutView'),
     path('bookings/',views.Bookings.as_view(),name='bookings'),
+    path('privacy/',views.AuthorityPrivacy.as_view(),name='privacy'),
 ]
