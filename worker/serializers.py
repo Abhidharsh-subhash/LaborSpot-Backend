@@ -9,7 +9,7 @@ from django.db import transaction
 from rest_framework.exceptions import AuthenticationFailed
 from Authority.models import Booking
 from User.models import Users
-# from .send_sms import forgot_sms
+from .send_sms import send_sms
 
 class PhoneValidator(RegexValidator):
     regex = r'^\+?[1-9]\d{9}$'
@@ -102,22 +102,43 @@ class WorkerLoginSerializer(serializers.ModelSerializer):
     
 class ForgotPasswordSerializer(serializers.ModelSerializer):
     phone_number=serializers.CharField(validators=[PhoneValidator])
-    class Meta:
-        model=Worker_details
-        fields=['phone_number']
     def validate(self, attrs):
         phone_number=attrs.get('phone_number')
         try:
             worker=Worker_details.objects.get(phone_number=phone_number)
             user = worker.worker
             mail=user.email
-            # forgot_sms(phone_number,mail)
+            send_sms(phone_number,mail)
         except Worker_details.DoesNotExist:
             raise AuthenticationFailed('Worker with the provided phone number doest not exist')
         return user
+    class Meta:
+        model=Worker_details
+        fields=['phone_number']
 
-class VerifyForgot(serializers.ModelSerializer):
-    pass
+class VerifyForgotchangeserializer(serializers.ModelSerializer):
+    new_password = serializers.CharField()
+    def validate(self, attrs):
+        otp=attrs.get('otp')
+        print(otp)
+        new_password=attrs.get('new_password')
+        password=attrs.get('password')
+        try:
+            user=Users.objects.get(otp=otp)
+            if user:
+                if password == new_password:
+                    user.set_password(new_password)
+                    user.otp=None
+                    user.save()
+                else:
+                    raise serializers.ValidationError('Your passwords are not matching.')
+        except Users.DoesNotExist:
+            raise serializers.ValidationError('Invalid Otp.')
+        attrs = super().validate(attrs)
+        return attrs
+    class Meta:
+        model = Users
+        fields = ['otp','password','new_password']
 
 class JobCategorySerializer(serializers.ModelSerializer):
     class Meta:

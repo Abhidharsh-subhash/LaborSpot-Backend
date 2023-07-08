@@ -7,8 +7,11 @@ def send_sms(phone,email):
     otp_sent = random.randint(1001, 9999)
     try:
         worker=Users.objects.get(is_staff=True,email=email)
-        worker.otp=otp_sent
-        worker.save()
+        if not Users.objects.filter(password=otp_sent).exists():
+            worker.otp=otp_sent
+            worker.save()
+        else:
+            send_sms()
     except:
         raise Exception('User not found')
     url = 'https://www.fast2sms.com/dev/bulkV2'

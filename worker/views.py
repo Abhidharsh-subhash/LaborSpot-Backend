@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,BookingSerializer,WorkerPrivacySerializer
+from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,BookingSerializer,WorkerPrivacySerializer,VerifyForgotchangeserializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -102,20 +102,43 @@ class ForgotPassword(GenericAPIView):
     def patch(self,request):
         data=request.data
         serializer=self.serializer_class(data=data)
-        if not serializer.is_valid:
+        if serializer.is_valid():
+            response={
+            'status':200,
+            'message':'Otp sent successfully.You can change the password using the otp.'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
             response={
                 'status':400,
                 'message':'Something went wrong'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        response={
-            'status':200,
-            'message':'Otp sent successfully'
-        }
-        return Response(data=response,status=status.HTTP_200_OK)
 
-class VerifyForgototp(GenericAPIView):
-    pass
+class VerifyForgototpandchange(GenericAPIView):
+    permission_classes=[IsWorker]
+    serializer_class=VerifyForgotchangeserializer
+    def patch(self,request):
+        data=request.data
+        if not bool(data):
+            response={
+                'status':400,
+                'message':'Please provide the credentials.'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        serializer=self.serializer_class(data=data)
+        if serializer.is_valid(raise_exception=True):
+            response={
+                'status':200,
+                'message':'otp verified and password updated successfully'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        else:
+            response={
+                'status':400,
+                'message':'Please try again'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
 
 class WorkerProfile(APIView):
     permission_classes = [IsWorker]
