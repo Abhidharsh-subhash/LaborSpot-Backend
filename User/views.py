@@ -197,26 +197,77 @@ class WorkerList(GenericAPIView):
         worker_id=request.data.get('worker_id')
         search_param=request.data.get('search')
         category_id = request.data.get('category_id')
-        if search_param:
+        order_by = request.data.get('order_by')
+        if category_id and search_param:
+            workers=self.queryset.filter(Q(username__icontains=search_param) & Q(worker__category__id=category_id))
+            if order_by == 'high_to_low':
+                workers = workers.order_by('-worker__salary')
+            elif order_by == 'low_to_high':
+                workers = workers.order_by('worker__salary') 
+            if workers.exists():
+                serializer=self.serializer_class(workers,many=True)
+                return Response(data=serializer.data,status=status.HTTP_200_OK)
+            else:
+                response={
+                    'status':404,
+                    'message':'No data found'
+                }
+                return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        elif search_param:
             workers=self.queryset.filter(Q(username__icontains=search_param) | Q(worker__category__category__icontains=search_param))
-            if category_id:  # Apply additional category filtering
-                workers = workers.filter(worker__category__id=category_id)
-            serializer=self.serializer_class(workers,many=True)
-            return Response(data=serializer.data,status=status.HTTP_200_OK)
-        elif worker_id is None:
-            queryset=self.get_queryset()
-            if category_id:  # Apply category filtering
-                queryset = queryset.filter(worker__category__id=category_id)
-            serializer=self.serializer_class(queryset,many=True)
-            return Response(data=serializer.data,status=status.HTTP_200_OK)
+            if order_by == 'high_to_low':
+                workers = workers.order_by('-worker__salary') 
+            elif order_by == 'low_to_high':
+                workers = workers.order_by('worker__salary') 
+            if workers.exists():
+                serializer=self.serializer_class(workers,many=True)
+                return Response(data=serializer.data,status=status.HTTP_200_OK)
+            else:
+                response={
+                    'status':404,
+                    'message':'No data found'
+                }
+                return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         elif category_id:
             workers = self.queryset.filter(worker__category__id=category_id)
-            serializer = self.serializer_class(workers, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            if order_by == 'high_to_low':
+                workers = workers.order_by('-worker__salary') 
+            elif order_by == 'low_to_high':
+                workers = workers.order_by('worker__salary') 
+            if workers.exists():
+                serializer = self.serializer_class(workers, many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            else:
+                response={
+                    'status':404,
+                    'message':'No data found'
+                }
+                return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        elif order_by:
+            if order_by == 'high_to_low':
+                workers = self.queryset.order_by('-worker__salary') 
+            elif order_by == 'low_to_high':
+                workers = self.queryset.order_by('worker__salary')
+            if workers.exists():
+                serializer = self.serializer_class(workers, many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            else:
+                response={
+                    'status':404,
+                    'message':'No data found'
+                }
+                return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         else:
             worker=get_object_or_404(self.get_queryset(),id=worker_id)
-            serializer=self.serializer_class(worker)
-            return Response(data=serializer.data,status=status.HTTP_200_OK)
+            if workers.exists():
+                serializer=self.serializer_class(worker)
+                return Response(data=serializer.data,status=status.HTTP_200_OK)
+            else:
+                response={
+                    'status':404,
+                    'message':'No data found'
+                }
+                return Response(data=response,status=status.HTTP_404_NOT_FOUND)
 
 class UserProfileView(APIView):
     permission_classes = [IsUser]
