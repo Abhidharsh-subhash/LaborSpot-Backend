@@ -33,6 +33,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    #for running asgi
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     'Authority',
     'User',
     'Worker',
+    'Chat',
     #third party libraries
     'rest_framework',
     # 'rest_framework.authtoken',
@@ -156,6 +159,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'LaborSpot.wsgi.application'
+ASGI_APPLICATION = 'LaborSpot.asgi.application'
 
 
 # Database
