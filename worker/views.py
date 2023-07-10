@@ -13,6 +13,7 @@ from .models import Worker_details
 from .permissions import IsWorker
 from django.contrib.auth.hashers import check_password
 from Authority.models import Booking
+from Chat.models import chatroom
 
 # Create your views here.
 
@@ -218,6 +219,7 @@ class WorkRequests(GenericAPIView):
     def patch(self,request):
         booking_id=request.data.get('booking_id')
         status=request.data.get('status')
+        worker=request.user.id
         try:
             booking=Booking.objects.get(id=booking_id,status='pending')
         except Booking.DoesNotExist:
@@ -229,6 +231,11 @@ class WorkRequests(GenericAPIView):
         if status == 'accept':
             booking.status='accepted'
             booking.save()
+            chat_room,created = chatroom.objects.get_or_create(name=booking.booking_id)
+            if created:
+                admin=Users.objects.get(is_superuser=True)
+                chat_room.users.add(admin.id)
+                chat_room.users.add(worker)
             response={
             'status':201,
             'message':'Work accepted successfully'

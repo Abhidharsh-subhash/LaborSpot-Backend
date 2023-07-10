@@ -11,6 +11,7 @@ class chatroom(models.Model):
 class ChatMessage(models.Model):
     room=models.ForeignKey(chatroom,on_delete=models.CASCADE,related_name='messages')
     sender=models.ForeignKey(Users,on_delete=models.CASCADE,related_name='sent_messages')
+    receiver = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='receive_messages', default=None , null = True)
     message=models.TextField()
     time=models.DateTimeField(auto_now_add=True)
     def __str__(self):

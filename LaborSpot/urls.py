@@ -47,4 +47,5 @@ urlpatterns = [
     path('authority/',include('Authority.urls')),
     path('user/',include('User.urls')),
     path('worker/',include('Worker.urls')),
+    path('chat/',include('Chat.urls')),
 ]
