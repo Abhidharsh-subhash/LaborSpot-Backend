@@ -232,10 +232,10 @@ class WorkRequests(GenericAPIView):
             booking.status='accepted'
             booking.save()
             chat_room,created = chatroom.objects.get_or_create(name=booking.booking_id)
-            if created:
-                admin=Users.objects.get(is_superuser=True)
-                chat_room.users.add(admin.id)
-                chat_room.users.add(worker)
+            # if created:
+            #     admin=Users.objects.get(is_superuser=True)
+            #     chat_room.users.add(admin.id)
+            #     chat_room.users.add(worker)
             response={
             'status':201,
             'message':'Work accepted successfully'

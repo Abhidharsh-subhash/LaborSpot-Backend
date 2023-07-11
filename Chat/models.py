@@ -4,7 +4,8 @@ from Authority.models import Users
 # Create your models here.
 class chatroom(models.Model):
     name = models.CharField(max_length=100)
-    users = models.ManyToManyField(Users,related_name='chat_room')
+    # users = models.ManyToManyField(Users,related_name='chat_room')
+    created_at=models.DateTimeField(auto_now_add=True,null=True)
     def __str__(self):
         return self.name
     

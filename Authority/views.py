@@ -17,6 +17,7 @@ from .permissions import IsAuthority
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q
 from django.contrib.auth.hashers import check_password
+from Chat.models import chatroom
 
 # Create your views here.
 
@@ -326,6 +327,9 @@ class Bookings(GenericAPIView):
             booking.payment_status='cancelled'
             booking.cancellation_reason=reason
             booking.save()
+            chat_room=chatroom.objects.get(name=booking.booking_id)
+            if chat_room:
+                chat_room.delete()
             response={
                 'status':200,
                 'message':'Booking terminated successfully.'
