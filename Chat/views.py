@@ -13,11 +13,8 @@ class ChatMessageView(GenericAPIView):
         sender_id = request.data.get('sender_id')
         message = request.data.get('message')
 
-        print(room_name)
         try:
-            print(room_name)
             room = chatroom.objects.get(name=room_name)
-            print(room)
             sender = Users.objects.get(id=sender_id)
 
             chat_message = ChatMessage.objects.create(

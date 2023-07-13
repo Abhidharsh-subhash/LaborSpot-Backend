@@ -8,10 +8,8 @@ from .serializers import *
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
-    print("HELLO")
 
     async def connect(self):
-        print("HELLO")
         room_id = self.scope['url_route']['kwargs']['room_id']
         # try:
         #     room_id = chatroom.objects.get(name=id)
@@ -19,7 +17,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # except chatroom.DoesNotExist:
         #     await self.close()
-        print(room_id)
         self.room_group_name = f'chat_{room_id}'
 
         exists = await sync_to_async(chatroom.objects.filter(name=room_id).exists)()
@@ -39,14 +36,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        print(close_code)
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
     async def receive(self, text_data):
-        print("RECEIVE")
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         sender_id = text_data_json['sender_id']
@@ -55,7 +50,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room = await sync_to_async(chatroom.objects.get)(name=self.room_name)
         sender = await sync_to_async(Users.objects.get)(id=sender_id)
         receiver = await sync_to_async(Users.objects.get)(id=receiver_id)
-        print("room",self.room_name)
 
         chat_message = await sync_to_async(ChatMessage.objects.create)(
             room=room,

@@ -552,25 +552,50 @@ class Makepayment(GenericAPIView):
         try:
             booking=Booking.objects.get(user=user,booking_id=booking_id)
         except Booking.DoesNotExist:
-            response={'status':400,'messsage':'Booking id not found'}
+            response={
+                'status':400,
+                'messsage':'Booking id not found'
+            }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         if booking.payment_amount != int(wage):
-            response={'status':400,'message':'Incorrect payment amount provided'}
+            response={
+                'status':400,
+                'message':'Incorrect payment amount provided'
+            }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        # elif booking.payment_status == 'completed':
-        #     response={'status':400,'message':'Payment already completed'}
-        #     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        # elif booking.status == 'pending':
-        #     response={'status':400,'message':'Payment can be done only after the work is completed'}
-        #     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        # elif booking.payment_amount.status == 'cancelled':
-        #     response={'status':400,'message':'Booking already cancelled'}
-        #     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        paypalrestsdk.configure({'mode': config('mode'),'client_id': config('client_id'),'client_secret': config('client_secret'),})  
+        elif booking.payment_status == 'completed':
+            response={
+                'status':400,
+                'message':'Payment already completed'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        elif booking.status == 'cancelled' or booking.status == 'terminated':
+            response={
+                'status':400,
+                'message':'Booking already cancelled'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        elif booking.status == 'pending':
+            response={
+                'status':400,
+                'message':'Payment can be done only after the work is completed'
+            }
+            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        paypalrestsdk.configure(
+            {'mode': config('mode'),
+             'client_id': config('client_id'),
+             'client_secret': config('client_secret'),
+            }
+        )  
         paypal_payment = paypalrestsdk.Payment({
             "intent": "sale",
             "payer": {"payment_method": "paypal"},
-            "transactions": [{"amount": {"total": int(booking.payment_amount),"currency": "USD"},
+            "transactions": [
+                {
+                    "amount": 
+                    {"total": int(booking.payment_amount),
+                     "currency": "USD"
+                    },
                 "description": "Payment for booking #" + str(booking_id),"invoice_number": str(booking_id)}],
                  "redirect_urls": {
                 "return_url": "http://your-website.com/return",
@@ -581,10 +606,16 @@ class Makepayment(GenericAPIView):
             booking.payment_status = 'completed'  # Update the payment status
             booking.save()
             approval_url = next(link.href for link in paypal_payment.links if link.rel == 'approval_url')
-            response = {'status': 200,'approval_url': approval_url}
+            response = {
+                'status': 200,
+                'approval_url': approval_url
+            }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
-            response = {'status': 500,'message': 'Failed to create PayPal payment'}
+            response = {
+                'status': 500,
+                'message': 'Failed to create PayPal payment'
+            }
             return Response(data=paypal_payment.error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
