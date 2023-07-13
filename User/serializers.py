@@ -230,3 +230,8 @@ class CompleteFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ['status']
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['payment_status']

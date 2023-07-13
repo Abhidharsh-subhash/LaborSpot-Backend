@@ -14,4 +14,5 @@ urlpatterns = [
     path('booking/',views.WorkerBooking.as_view(),name='booking'),
     path('booking-history/',views.BookingHistory.as_view(),name='booking-history'),
     path('completefeedback/',views.CompleteFeedback.as_view(),name='completefeedback'),
+    path('payment/',views.Makepayment.as_view(),name='payment'),
 ]
