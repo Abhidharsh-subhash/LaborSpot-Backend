@@ -205,4 +205,4 @@ class BookingSerializer(serializers.ModelSerializer):
             return None
     class Meta:
         model = Booking
-        fields = ['id','username','status','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','feedback']
+        fields = ['id','booking_id','username','status','date','time_from','time_to','payment_amount','payment_status','location','contact_information','instructions','feedback']

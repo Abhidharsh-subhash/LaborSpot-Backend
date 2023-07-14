@@ -262,7 +262,7 @@ class WorkerList(GenericAPIView):
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         else:
-            worker=get_object_or_404(self.get_queryset(),id=worker_id)
+            worker=get_object_or_404(self.get_queryset())
             if workers.exists():
                 serializer=self.serializer_class(worker)
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
@@ -548,6 +548,8 @@ class Makepayment(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=PaymentSerializer
     def post(self,request):
+        
+        breakpoint()
         user=request.user.id
         booking_id=request.data.get('booking_id')
         wage=request.data.get('wage')
@@ -606,9 +608,11 @@ class Makepayment(GenericAPIView):
                 "cancel_url": "http://your-website.com/cancel"
             }
         })
+
         if paypal_payment.create():
             # booking.payment_status = 'completed'  # Update the payment status
             # booking.save()
+            print(paypal_payment)
             approval_url = next(link.href for link in paypal_payment.links if link.rel == 'approval_url')
             response = {
                 'status': 200,

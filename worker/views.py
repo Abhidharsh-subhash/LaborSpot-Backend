@@ -202,7 +202,6 @@ class WorkRequests(GenericAPIView):
         if status is not None:
             worker=request.user.id
             bookings=Booking.objects.filter(worker=worker,status=status)
-            breakpoint()
             if not bookings:
                 response={
                     'status':404,
