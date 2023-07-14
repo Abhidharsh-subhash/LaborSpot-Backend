@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
+
+from User.payments import make_paypal_payment
 from.serializers import SignUpSerializer,PaymentSerializer,UserLoginSerializer,CompleteFeedbackSerializer,BookingHistorySerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -582,9 +584,10 @@ class Makepayment(GenericAPIView):
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         paypalrestsdk.configure(
-            {'mode': config('mode'),
-             'client_id': config('client_id'),
-             'client_secret': config('client_secret'),
+            {
+                'mode': config('mode'),
+                'client_id': config('client_id'),
+                'client_secret': config('client_secret'),
             }
         )  
         paypal_payment = paypalrestsdk.Payment({
@@ -593,18 +596,19 @@ class Makepayment(GenericAPIView):
             "transactions": [
                 {
                     "amount": 
-                    {"total": int(booking.payment_amount),
-                     "currency": "USD"
+                    {
+                        "total": int(booking.payment_amount),
+                        "currency": "USD"
                     },
                 "description": "Payment for booking #" + str(booking_id),"invoice_number": str(booking_id)}],
                  "redirect_urls": {
-                "return_url": "http://your-website.com/return",
+                "return_url": "https://www.sandbox.paypal.com/signin",
                 "cancel_url": "http://your-website.com/cancel"
             }
         })
         if paypal_payment.create():
-            booking.payment_status = 'completed'  # Update the payment status
-            booking.save()
+            # booking.payment_status = 'completed'  # Update the payment status
+            # booking.save()
             approval_url = next(link.href for link in paypal_payment.links if link.rel == 'approval_url')
             response = {
                 'status': 200,
@@ -618,6 +622,42 @@ class Makepayment(GenericAPIView):
             }
             return Response(data=paypal_payment.error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        
+class PaymentConfirmation(APIView):
+    """
+    Endpoint to confirm PayPal payment status
+    """
+    permission_classes=[IsUser]
+    def post(self, request):
+        payment_id = request.data.get('payment_id')
+        payer_id = request.data.get('payer_id')
+
+        # Use the payment_id and payer_id to confirm the payment status with PayPal
+        paypalrestsdk.configure(
+            {'mode': config('mode'),
+             'client_id': config('client_id'),
+             'client_secret': config('client_secret'),
+            }
+        )
+        paypal_payment = paypalrestsdk.Payment.find(payment_id)
+        if paypal_payment.execute({"payer_id": payer_id}):
+            # Payment is confirmed, update the payment status in your system
+            # You can retrieve the corresponding booking and update the payment status
+            booking = Booking.objects.get(booking_id=paypal_payment.transactions[0].invoice_number)
+            booking.payment_status = 'completed'
+            booking.save()
+
+            response = {
+                'status': 200,
+                'message': 'Payment confirmed'
+            }
+            return Response(data=response, status=status.HTTP_200_OK)
+        else:
+            # Payment confirmation failed
+            response = {
+                'status': 400,
+                'message': 'Payment confirmation failed'
+            }
+            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+       
         
             
