@@ -130,7 +130,7 @@ class ForgotPasswordEmail(GenericAPIView):
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
         email = request.data.get('email', '')
-        if Users.objects.filter(email=email).exists():
+        if Users.objects.filter(email=email).exists() and serializer.is_valid():
             user=Users.objects.get(email=email)
             #encoding the user id
             uidb64=urlsafe_base64_encode(smart_bytes(user.id))
@@ -138,8 +138,9 @@ class ForgotPasswordEmail(GenericAPIView):
             token=PasswordResetTokenGenerator().make_token(user)
             current_site=get_current_site(request=request).domain
             relativelink=reverse('password-reset-confirm',kwargs={'uidb64':uidb64,'token':token})
+            redirect_url = request.data.get('redirect_url', '')
             absurl='http://'+current_site+relativelink
-            email_body='Hello \n Use below link to change your password \n'+absurl
+            email_body='Hello \n Use below link to change your password \n'+absurl+"?redirect_url="+redirect_url
             data={'email_body':email_body,'to_email':user.email,'email_subject':'Reset your password'}
             forgot_send_mail(data)
             response={
@@ -198,16 +199,15 @@ class WorkerList(GenericAPIView):
     serializer_class=WorkerListSerializer
     queryset=Users.objects.filter(Q(is_staff=True) & Q(is_verified=True) & Q(is_active=True)).select_related('worker').all()
     def get(self,request):
-        worker_id=request.data.get('worker_id')
         search_param=request.data.get('search')
         category_id = request.data.get('category_id')
         order_by = request.data.get('order_by')
         if category_id and search_param:
             workers=self.queryset.filter(Q(username__icontains=search_param) & Q(worker__category__id=category_id))
             if order_by == 'high_to_low':
-                workers = workers.order_by('-worker__salary')
+                workers = workers.order_by('-worker__charge')
             elif order_by == 'low_to_high':
-                workers = workers.order_by('worker__salary') 
+                workers = workers.order_by('worker__charge') 
             if workers.exists():
                 serializer=self.serializer_class(workers,many=True)
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
@@ -220,9 +220,9 @@ class WorkerList(GenericAPIView):
         elif search_param:
             workers=self.queryset.filter(Q(username__icontains=search_param) | Q(worker__category__category__icontains=search_param))
             if order_by == 'high_to_low':
-                workers = workers.order_by('-worker__salary') 
+                workers = workers.order_by('-worker__charge') 
             elif order_by == 'low_to_high':
-                workers = workers.order_by('worker__salary') 
+                workers = workers.order_by('worker__charge') 
             if workers.exists():
                 serializer=self.serializer_class(workers,many=True)
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
@@ -235,9 +235,9 @@ class WorkerList(GenericAPIView):
         elif category_id:
             workers = self.queryset.filter(worker__category__id=category_id)
             if order_by == 'high_to_low':
-                workers = workers.order_by('-worker__salary') 
+                workers = workers.order_by('-worker__charge') 
             elif order_by == 'low_to_high':
-                workers = workers.order_by('worker__salary') 
+                workers = workers.order_by('worker__charge') 
             if workers.exists():
                 serializer = self.serializer_class(workers, many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -249,9 +249,9 @@ class WorkerList(GenericAPIView):
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         elif order_by:
             if order_by == 'high_to_low':
-                workers = self.queryset.order_by('-worker__salary') 
+                workers = self.queryset.order_by('-worker__charge') 
             elif order_by == 'low_to_high':
-                workers = self.queryset.order_by('worker__salary')
+                workers = self.queryset.order_by('worker__charge')
             if workers.exists():
                 serializer = self.serializer_class(workers, many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -262,9 +262,9 @@ class WorkerList(GenericAPIView):
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         else:
-            worker=get_object_or_404(self.get_queryset())
+            workers=self.get_queryset()
             if workers.exists():
-                serializer=self.serializer_class(worker)
+                serializer=self.serializer_class(workers,many=True)
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
             else:
                 response={
