@@ -68,7 +68,13 @@ class UserVerifyotp(APIView):
                             'message':'Invalid Email address'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                    if user.otp == otp:
+                    elif user.otp_expiration and datetime.now() > user.otp_expiration:
+                        response = {
+                            'status': 400,
+                            'message': 'OTP has expired'
+                        }
+                        return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+                    elif user.otp == otp:
                         user.is_verified=True
                         user.otp=None
                         user.save()
@@ -125,12 +131,12 @@ class UserLoginView(APIView):
         # response.set_cookie('refresh_token', str(tokens))
         # return response
     
-class ForgotPasswordEmail(GenericAPIView):
+class ForgotPasswordEmail(GenericAPIView):  
     serializer_class=ForgotPasswordSerializer
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
         email = request.data.get('email', '')
-        if Users.objects.filter(email=email).exists() and serializer.is_valid():
+        if Users.objects.filter(email=email,is_user=1).exists() and serializer.is_valid():
             user=Users.objects.get(email=email)
             #encoding the user id
             uidb64=urlsafe_base64_encode(smart_bytes(user.id))

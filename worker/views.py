@@ -14,6 +14,7 @@ from .permissions import IsWorker
 from django.contrib.auth.hashers import check_password
 from Authority.models import Booking
 from Chat.models import chatroom
+from datetime import datetime, timedelta
 
 # Create your views here.
 
@@ -54,7 +55,13 @@ class WorkerVerifyotp(APIView):
                             'message':'Invalid Phone number'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                    if user.otp == otp:
+                    elif user.otp_expiration and datetime.now() > user.otp_expiration:
+                        response = {
+                            'status': 400,
+                            'message': 'OTP has expired'
+                        }
+                        return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+                    elif user.otp == otp:
                         user.is_verified=True
                         user.otp=None
                         user.save()

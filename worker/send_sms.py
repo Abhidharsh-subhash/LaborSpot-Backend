@@ -2,6 +2,7 @@ import requests
 import random
 from Authority.models import Users 
 from decouple import config
+from datetime import datetime, timedelta
 
 def send_sms(phone,email):
     otp_sent = random.randint(1001, 9999)
@@ -9,6 +10,7 @@ def send_sms(phone,email):
         worker=Users.objects.get(is_staff=True,email=email)
         if not Users.objects.filter(password=otp_sent).exists():
             worker.otp=otp_sent
+            worker.otp_expiration = datetime.now() + timedelta(minutes=5)  # Set expiration to 5 minutes from now
             worker.save()
         else:
             send_sms()
