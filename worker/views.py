@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,BookingSerializer,WorkerPrivacySerializer,VerifyForgotchangeserializer
+from.serializers import SignupSerializer,ResendOtpSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,BookingSerializer,WorkerPrivacySerializer,VerifyForgotchangeserializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -15,6 +15,7 @@ from django.contrib.auth.hashers import check_password
 from Authority.models import Booking
 from Chat.models import chatroom
 from datetime import datetime, timedelta
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
@@ -88,6 +89,26 @@ class WorkerVerifyotp(APIView):
                 'message':'Something went wrong'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
+class ResendOtp(GenericAPIView):
+    serializer_class=ResendOtpSerializer
+    def post(self,request):
+        data=request.data
+        serializer=self.serializer_class(data=data)
+        if serializer.is_valid():
+            phone_number=serializer.data['phone_number']
+            worker=get_object_or_404(Worker_details,phone_number=phone_number)
+            try:
+                send_sms(data['Worker_details.phone_number'],phone_number)
+            except:
+                raise APIException('Failed to send otp to your phone. Try again')
+            response={
+                'status':200,
+                'message':'Otp resend successfull',
+                'warning':'OTP is valid for only 5 minutes'
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 class WorkerLoginView(GenericAPIView):
     serializer_class=WorkerLoginSerializer

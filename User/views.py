@@ -4,7 +4,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 
 from User.payments import make_paypal_payment
-from.serializers import SignUpSerializer,PaymentSerializer,UserLoginSerializer,CompleteFeedbackSerializer,BookingHistorySerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
+from.serializers import SignUpSerializer,PaymentSerializer,ResendOtpSerializer,UserLoginSerializer,CompleteFeedbackSerializer,BookingHistorySerializer,VerifyAccountSerializer,ForgotPasswordSerializer,SetNewPasswordSerializer,WorkerListSerializer,UserProfileSerializer,UserPrivacySerializer,BookingSerializer
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -27,6 +27,8 @@ from django.db.models import Q
 from django.contrib.auth.hashers import check_password
 from Worker.models import Worker_details
 from datetime import date,datetime,timedelta
+from datetime import datetime
+from pytz import timezone
 import string,secrets
 import paypalrestsdk
 from decouple import config
@@ -47,6 +49,7 @@ class UserSignUpView(GenericAPIView):
             response={
                 'status':201,
                 'message':'User registration successfull,check email and verify by otp',
+                'warning':'OTP is valid for only 2 minutes'
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
@@ -60,47 +63,73 @@ class UserVerifyotp(APIView):
             if serializer.is_valid():
                 email=serializer.data['email']
                 otp=serializer.data['otp']
-                try:
-                    user=Users.objects.get(email=email)
-                    if not user:
+                user = get_object_or_404(Users, email=email)
+                if not user:
                         response={
                             'status':400,
                             'message':'Invalid Email address'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                    elif user.otp_expiration and datetime.now() > user.otp_expiration:
-                        response = {
-                            'status': 400,
-                            'message': 'OTP has expired'
-                        }
-                        return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
-                    elif user.otp == otp:
-                        user.is_verified=True
-                        user.otp=None
-                        user.save()
+                elif user.otp == otp:
+                        otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
+                        current_time = datetime.now(timezone('Asia/Kolkata'))
+                        breakpoint()
+                        if otp_expiration_utc < current_time:
+                            breakpoint()
+                            response = {
+                                'status': 400,
+                                'message': 'OTP has expired,You can resend the otp'
+                            }
+                            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            breakpoint()
+                            user.is_verified=True
+                            user.otp=None
+                            user.otp_expiration=None
+                            user.save()
+                            response={
+                                'status':200,
+                                'message':'Otp Verified you can login with your credentials'
+                            }
+                            return Response(data=response,status=status.HTTP_200_OK)
+                elif user.otp == None:
                         response={
-                            'status':200,
-                            'message':'Otp Verified you can login with your credentials'
+                            'status':226,
+                            'message':'You are already verified'
                         }
-                        return Response(data=response,status=status.HTTP_200_OK)
-                    else:
+                        return Response(data=response,status=status.HTTP_226_IM_USED)
+                else:
                         response={
                             'status':400,
                             'message':'Wrong otp'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                except Users.DoesNotExist:
-                    response = {
-                        'status':400,
-                        'message': 'User not found for the provided email'
-                    }
-                    return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
         except:
             response={
                 'status':400,
                 'message':'Something went wrong'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+        
+class ResendOtp(GenericAPIView):
+    serializer_class=ResendOtpSerializer
+    def post(self,request):
+        data=request.data
+        serializer=self.serializer_class(data=data)
+        if serializer.is_valid():
+            email=serializer.data['email']
+            user=get_object_or_404(Users,email=email)
+            try:  
+                send_otp_via_mail(email)
+            except:
+                raise APIException('Failed to send otp to mail.Try again')
+            response={
+                'status':200,
+                'message':'Resend otp successfull',
+                'warning':'OTP is valid for only 5 minutes'
+            }  
+            return Response(data=response,status=status.HTTP_200_OK)
+        return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 class UserLoginView(APIView):
     serializer_class=UserLoginSerializer

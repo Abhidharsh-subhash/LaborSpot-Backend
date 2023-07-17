@@ -67,6 +67,9 @@ class SignUpSerializer(serializers.ModelSerializer):
 class VerifyAccountSerializer(serializers.Serializer):
     email=serializers.EmailField(validators=[EmailValidator()])
     otp=serializers.CharField(validators=[OTPValidator()])
+
+class ResendOtpSerializer(serializers.Serializer):
+    email=serializers.EmailField(validators=[EmailValidator()])
     
 class UserLoginSerializer(serializers.ModelSerializer):
     email=serializers.EmailField(validators=[EmailValidator()])

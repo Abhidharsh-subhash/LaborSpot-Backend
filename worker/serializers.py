@@ -78,6 +78,9 @@ class VerifyAccountSerializer(serializers.Serializer):
     phone_number=serializers.CharField(validators=[PhoneValidator()])
     otp=serializers.CharField(validators=[OTPValidator()])
 
+class ResendOtpSerializer(serializers.Serializer):
+    phone_number=serializers.CharField(validators=[PhoneValidator()])
+
 class WorkerLoginSerializer(serializers.ModelSerializer):
     email=serializers.EmailField(validators=[EmailValidator()])
     password=serializers.CharField(style={'input-type':'password'})

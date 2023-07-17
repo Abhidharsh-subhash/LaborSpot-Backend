@@ -40,6 +40,7 @@ class Users(AbstractUser):
     is_user=models.IntegerField(choices=choices,default=0)
     is_verified=models.BooleanField(default=False)
     otp=models.CharField(max_length=6,null=True,blank=True)
+    otp_expiration = models.DateTimeField(null=True, blank=True)
 
     objects=CustomUserManager()
     USERNAME_FIELD = "email"

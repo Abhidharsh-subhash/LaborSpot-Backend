@@ -38,7 +38,7 @@ def send_otp_via_mail(email):
         message.content_subtype = 'html'
         message.send()
         user_obj.otp=otp
-        user_obj.otp_expiration = datetime.now() + timedelta(minutes=5)  # Set expiration to 5 minutes from now
+        user_obj.otp_expiration = datetime.now() + timedelta(minutes=2)  # Set expiration to 5 minutes from now
         user_obj.save()
         print('email send successfully')
     else:
