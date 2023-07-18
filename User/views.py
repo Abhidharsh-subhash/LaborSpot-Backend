@@ -49,7 +49,7 @@ class UserSignUpView(GenericAPIView):
             response={
                 'status':201,
                 'message':'User registration successfull,check email and verify by otp',
-                'warning':'OTP is valid for only 2 minutes'
+                'warning':'OTP is valid for only 5 minutes'
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
@@ -72,17 +72,18 @@ class UserVerifyotp(APIView):
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
                 elif user.otp == otp:
                         otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
-                        current_time = datetime.now(timezone('Asia/Kolkata'))
-                        breakpoint()
-                        if otp_expiration_utc < current_time:
-                            breakpoint()
+                        current = datetime.now(timezone('Asia/Kolkata'))
+                        expiration_time=otp_expiration_utc.strftime('%H:%M:%S')
+                        current_time=current.strftime('%H:%M:%S')
+                        current_date= current.date()
+                        expiration_date=otp_expiration_utc.date()
+                        if current_date >= expiration_date and  expiration_time < current_time:
                             response = {
                                 'status': 400,
                                 'message': 'OTP has expired,You can resend the otp'
                             }
                             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
                         else:
-                            breakpoint()
                             user.is_verified=True
                             user.otp=None
                             user.otp_expiration=None

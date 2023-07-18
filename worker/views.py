@@ -16,6 +16,7 @@ from Authority.models import Booking
 from Chat.models import chatroom
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
+from pytz import timezone
 
 # Create your views here.
 
@@ -34,6 +35,7 @@ class WorkerSignUpView(GenericAPIView):
             response={
                 'status':201,
                 'message':'Worker registered successfully,Confrim by entering your Otp',
+                'warning':'OTP is valid only for 5 minutes'
             }
             return Response(data=response,status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
@@ -56,21 +58,35 @@ class WorkerVerifyotp(APIView):
                             'message':'Invalid Phone number'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                    elif user.otp_expiration and datetime.now() > user.otp_expiration:
-                        response = {
-                            'status': 400,
-                            'message': 'OTP has expired'
-                        }
-                        return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
                     elif user.otp == otp:
-                        user.is_verified=True
-                        user.otp=None
-                        user.save()
+                        otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
+                        current = datetime.now(timezone('Asia/Kolkata'))
+                        expiration_time=otp_expiration_utc.strftime('%H:%M:%S')
+                        current_time=current.strftime('%H:%M:%S')
+                        current_date= current.date()
+                        expiration_date=otp_expiration_utc.date()
+                        if current_date >= expiration_date and  expiration_time < current_time:
+                            response = {
+                                'status': 400,
+                                'message': 'OTP has expired,You can resend the otp'
+                            }
+                            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            user.is_verified=True
+                            user.otp=None
+                            user.otp_expiration=None
+                            user.save()
+                            response={
+                                'status':200,
+                                'message':'Otp Verified you can login with your credentials'
+                            }
+                            return Response(data=response,status=status.HTTP_200_OK)
+                    elif user.otp == None:
                         response={
-                            'status':200,
-                            'message':'Otp Verified you can login with your credentials'
+                            'status':226,
+                            'message':'You are already verified'
                         }
-                        return Response(data=response,status=status.HTTP_200_OK)
+                        return Response(data=response,status=status.HTTP_226_IM_USED)
                     else:
                         response={
                             'status':400,
@@ -98,8 +114,10 @@ class ResendOtp(GenericAPIView):
         if serializer.is_valid():
             phone_number=serializer.data['phone_number']
             worker=get_object_or_404(Worker_details,phone_number=phone_number)
+            user = get_object_or_404(Worker_details.objects.prefetch_related('worker'),phone_number=phone_number)
+            breakpoint()
             try:
-                send_sms(data['Worker_details.phone_number'],phone_number)
+                send_sms(phone_number,user.worker.email)
             except:
                 raise APIException('Failed to send otp to your phone. Try again')
             response={
