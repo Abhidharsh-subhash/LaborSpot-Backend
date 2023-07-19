@@ -4,6 +4,7 @@ from Authority.models import Users
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from datetime import datetime, timedelta
+from pytz import timezone
 
 # def send_otp_via_mail(email):
 #     if email:
@@ -38,7 +39,7 @@ def send_otp_via_mail(email):
         message.content_subtype = 'html'
         message.send()
         user_obj.otp=otp
-        user_obj.otp_expiration = datetime.now() + timedelta(minutes=5)  # Set expiration to 5 minutes from now
+        user_obj.otp_expiration = datetime.now(timezone('Asia/Kolkata')) + timedelta(minutes=5)  # Set expiration to 5 minutes from now
         user_obj.save()
         print(otp)
         print('email send successfully')
