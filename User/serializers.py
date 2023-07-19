@@ -53,15 +53,16 @@ class SignUpSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user_details_data = validated_data.pop('user_details')
         validated_data['is_user'] = 1
+        user = None
         with transaction.atomic():
             try:
                 user = super(SignUpSerializer, self).create(validated_data)
                 user.set_password(password)
                 user.save()
-                User_details.objects.create(user=user, **user_details_data)
             except Exception as e:
                 user.delete()
                 raise e
+        User_details.objects.create(user=user, **user_details_data)
         return user
 
 class VerifyAccountSerializer(serializers.Serializer):

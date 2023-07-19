@@ -5,7 +5,7 @@ from Authority.models import Users
 
 class User_details(models.Model):
     user=models.OneToOneField(Users,on_delete=models.CASCADE,related_name='user')
-    phone_number=models.IntegerField()
+    phone_number=models.BigIntegerField()
     photo=models.ImageField('image',upload_to='userimages/')
 
     def __str__(self) -> str:
