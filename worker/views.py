@@ -53,13 +53,13 @@ class WorkerVerifyotp(APIView):
                 try:
                     worker=Worker_details.objects.get(phone_number=phone_number)
                     user=worker.worker
-                    if not user:
+                    if not worker:
                         response={
                             'status':400,
                             'message':'Invalid Phone number'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                    elif user.otp == otp:
+                    if user.otp == otp:
                         otp_expiration_utc = user.otp_expiration
                         kolkata_timezone = pytz.timezone('Asia/Kolkata')
                         otp_expiration_kolkata = otp_expiration_utc.astimezone(kolkata_timezone)
