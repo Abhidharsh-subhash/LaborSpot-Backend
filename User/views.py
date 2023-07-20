@@ -31,6 +31,7 @@ from datetime import datetime
 from pytz import timezone
 import string,secrets
 import paypalrestsdk
+import pytz
 from decouple import config
 # Create your views here.
 
@@ -71,16 +72,25 @@ class UserVerifyotp(APIView):
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
                 elif user.otp == otp:
-                        otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
+                        otp_expiration_utc = user.otp_expiration
+                        kolkata_timezone = pytz.timezone('Asia/Kolkata')
+                        otp_expiration_kolkata = otp_expiration_utc.astimezone(kolkata_timezone)
+                        # otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
                         current = datetime.now(timezone('Asia/Kolkata'))
-                        expiration_time=otp_expiration_utc.strftime('%H:%M:%S')
+                        expiration_time=otp_expiration_kolkata.strftime('%H:%M:%S')
                         current_time=current.strftime('%H:%M:%S')
                         current_date= current.date()
-                        expiration_date=otp_expiration_utc.date()
+                        expiration_date=otp_expiration_kolkata.date()
                         if current_date >= expiration_date and  expiration_time < current_time:
                             response = {
                                 'status': 400,
-                                'message': 'OTP has expired,You can resend the otp'
+                                'message': 'OTP has expired,You can resend the otp',
+                                'otp_exp':user.otp_expiration,
+                                'otp_exp_kol':otp_expiration_kolkata,
+                                'current_time':current_time,
+                                'exp_d':expiration_date,
+                                'exp_t':expiration_time
+                                
                             }
                             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
                         else:
