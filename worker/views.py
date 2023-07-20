@@ -50,16 +50,15 @@ class WorkerVerifyotp(APIView):
             if serializer.is_valid():
                 phone_number=serializer.data['phone_number']
                 otp=serializer.data['otp']
-                try:
-                    worker=Worker_details.objects.get(phone_number=phone_number)
-                    user=worker.worker
-                    if not worker:
-                        response={
-                            'status':400,
-                            'message':'Invalid Phone number'
-                        }
-                        return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                    if user.otp == otp:
+                worker=get_object_or_404(Worker_details,phone_number=phone_number)
+                user=worker.worker
+                if not worker:
+                    response={
+                        'status':400,
+                        'message':'Invalid Phone number'
+                    }
+                    return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
+                elif user.otp == otp:
                         otp_expiration_utc = user.otp_expiration
                         kolkata_timezone = pytz.timezone('Asia/Kolkata')
                         otp_expiration_kolkata = otp_expiration_utc.astimezone(kolkata_timezone)
@@ -87,24 +86,18 @@ class WorkerVerifyotp(APIView):
                                 'message':'Otp Verified you can login with your credentials'
                             }
                             return Response(data=response,status=status.HTTP_200_OK)
-                    elif user.otp == None:
+                elif user.otp == None:
                         response={
                             'status':226,
                             'message':'You are already verified'
                         }
                         return Response(data=response,status=status.HTTP_226_IM_USED)
-                    else:
+                else:
                         response={
                             'status':400,
                             'message':'Wrong otp'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-                except Worker_details.DoesNotExist:
-                    response = {
-                        'status':400,
-                        'message': 'Worker not found for the provided phone number'
-                    }
-                    return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
         except:
             response={
                 'status':400,
