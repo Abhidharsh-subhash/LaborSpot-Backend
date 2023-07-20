@@ -187,7 +187,6 @@ DATABASES = {
         'USER': config('DATABASES_DEFAULT_USER'),
         'PASSWORD': config('DATABASES_DEFAULT_PASSWORD'),
         'HOST': config('DATABASES_DEFAULT_HOST'),
-        'TIME_ZONE': 'Asia/Kolkata',
     }
 }
 
