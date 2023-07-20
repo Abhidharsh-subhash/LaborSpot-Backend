@@ -44,7 +44,6 @@ class WorkerSignUpView(GenericAPIView):
 class WorkerVerifyotp(APIView):
     serializer_class=VerifyAccountSerializer
     def post(self,request):
-        try:
             data=request.data
             serializer=self.serializer_class(data=data)
             if serializer.is_valid():
@@ -98,12 +97,6 @@ class WorkerVerifyotp(APIView):
                             'message':'Wrong otp'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        except:
-            response={
-                'status':400,
-                'message':'Something went wrong'
-            }
-            return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         
 class ResendOtp(GenericAPIView):
     serializer_class=ResendOtpSerializer
