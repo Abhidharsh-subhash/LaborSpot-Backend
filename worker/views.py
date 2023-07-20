@@ -17,6 +17,7 @@ from Chat.models import chatroom
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from pytz import timezone
+import pytz
 
 # Create your views here.
 
@@ -59,12 +60,15 @@ class WorkerVerifyotp(APIView):
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
                     elif user.otp == otp:
-                        otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
+                        otp_expiration_utc = user.otp_expiration
+                        kolkata_timezone = pytz.timezone('Asia/Kolkata')
+                        otp_expiration_kolkata = otp_expiration_utc.astimezone(kolkata_timezone)
+                        # otp_expiration_utc = user.otp_expiration.astimezone(timezone('UTC'))
                         current = datetime.now(timezone('Asia/Kolkata'))
-                        expiration_time=otp_expiration_utc.strftime('%H:%M:%S')
+                        expiration_time=otp_expiration_kolkata.strftime('%H:%M:%S')
                         current_time=current.strftime('%H:%M:%S')
                         current_date= current.date()
-                        expiration_date=otp_expiration_utc.date()
+                        expiration_date=otp_expiration_kolkata.date()
                         if current_date >= expiration_date and  expiration_time < current_time:
                             response = {
                                 'status': 400,

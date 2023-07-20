@@ -84,12 +84,7 @@ class UserVerifyotp(APIView):
                         if current_date >= expiration_date and  expiration_time < current_time:
                             response = {
                                 'status': 400,
-                                'message': 'OTP has expired,You can resend the otp',
-                                'otp_exp':user.otp_expiration,
-                                'otp_exp_kol':otp_expiration_kolkata,
-                                'current_time':current_time,
-                                'exp_d':expiration_date,
-                                'exp_t':expiration_time
+                                'message': 'OTP has expired,You can resend the otp'
                                 
                             }
                             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
