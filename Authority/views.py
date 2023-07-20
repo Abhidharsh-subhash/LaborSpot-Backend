@@ -21,11 +21,6 @@ from .serializers import UserSerializer, CategorySerializer, WorkerSerializer, L
 
 class AuthorityLoginApiview(APIView):
     serializer_class = LoginSerializer
-
-    @swagger_auto_schema(
-        operation_summary='Login for Authority only',
-        operation_description='This returns the success message'
-    )
     def post(self, request: Request):
         email = request.data.get('email')
         password = request.data.get('password')
