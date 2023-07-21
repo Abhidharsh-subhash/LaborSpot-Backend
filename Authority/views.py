@@ -27,7 +27,7 @@ class AuthorityLoginApiview(APIView):
         user = authenticate(email=email, password=password)
         if user is None:
             response = {
-                'status': 200,
+                'status': 400,
                 'message': 'Invalid email or password'
             }
             return Response(data=response, status=status.HTTP_401_UNAUTHORIZED)
@@ -164,7 +164,7 @@ class UserView(GenericAPIView):
     queryset = Users.objects.filter(is_user=1, is_verified=True).select_related('user').all()
 
     def get(self, request):
-        search_param = request.query_params.get('search', '')
+        search_param = request.data.get('search')
         user_id = request.data.get('user_id')
         if search_param:
             users = self.queryset.filter(Q(username__icontains=search_param) | Q(email__icontains=search_param))
@@ -262,8 +262,8 @@ class WorkerView(GenericAPIView):
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         elif worker_id:
-            worker = get_object_or_404(self.get_queryset(), id=worker_id)
-            if worker.exists():
+            worker = self.get_queryset().filter(id=worker_id).first()
+            if worker:
                 serializer = self.serializer_class(worker)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={

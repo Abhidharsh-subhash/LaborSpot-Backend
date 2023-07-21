@@ -107,7 +107,6 @@ class ResendOtp(GenericAPIView):
             phone_number=serializer.data['phone_number']
             worker=get_object_or_404(Worker_details,phone_number=phone_number)
             user = get_object_or_404(Worker_details.objects.prefetch_related('worker'),phone_number=phone_number)
-            breakpoint()
             try:
                 send_sms(phone_number,user.worker.email)
             except:
@@ -243,7 +242,7 @@ class WorkRequests(GenericAPIView):
             if not bookings:
                 response={
                     'status':404,
-                    'message':'Not found'
+                    'message':'No data found'
                 }
                 return Response(data=response)
             serializer=self.serializer_class(bookings,many=True)

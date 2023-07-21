@@ -427,6 +427,7 @@ class WorkerBooking(GenericAPIView):
         except Users.DoesNotExist:
             return Response({"error": "Invalid worker."}, status=status.HTTP_400_BAD_REQUEST)
         try:
+            breakpoint()
             user=Worker_details.objects.get(worker=worker.id)
             amount=user.charge
         except Users.DoesNotExist:
@@ -509,8 +510,14 @@ class BookingHistory(GenericAPIView):
             bookings=Booking.objects.filter(user=user,status=status)
         else:
             bookings=Booking.objects.filter(user=user)
-        serializer=self.serializer_class(bookings,many=True)
-        return Response(data=serializer.data)
+        if bookings.exists():
+            serializer=self.serializer_class(bookings,many=True)
+            return Response(data=serializer.data)
+        response={
+            'status':404,
+            'message':'No data found'
+        }
+        return Response(data=response)
     def post(self,request):
         user=request.user.id
         booking_id=request.data.get('booking_id')
