@@ -102,26 +102,45 @@ class CategoryView(GenericAPIView):
         cat_id = request.data.get('cat_id')
         if search_param:
             category = self.queryset.filter(category__icontains=search_param)
-            serializer = self.serializer_class(category, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            if category.exists():
+                serializer = self.serializer_class(category, many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
         if cat_id is not None:
             cat = get_object_or_404(Job_Category, pk=cat_id)
             serializer = self.serializer_class(instance=cat)
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         else:
-            serializer = self.serializer_class(self.get_queryset(), many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            if self.get_queryset().exists():
+                serializer = self.serializer_class(self.get_queryset(), many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request):
         cat_id = request.data.get('cat_id')
         if cat_id:
-            cat = get_object_or_404(Job_Category, pk=cat_id)
+            try:
+                cat = Job_Category.objects.get(id=cat_id)
+            except:
+                response={
+                    'status':400,
+                    'message':'wrong category id'
+                }
+                return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
             cat.delete()
             response = {
-                'status': 204,
+                'status': 200,
                 'message': 'Category deleted successfully'
             }
-            return Response(data=response, status=status.HTTP_204_NO_CONTENT)
+            return Response(data=response, status=status.HTTP_200_OK)
 
     def put(self, request):
         cat_id = request.data.get('cat_id')
@@ -132,7 +151,7 @@ class CategoryView(GenericAPIView):
             serializer.save()
             response = {
                 'status': 200,
-                'message': 'Category updated',
+                'message': 'Category updated successfully',
                 'data': serializer.data
             }
             return Response(data=response, status=status.HTTP_200_OK)
@@ -147,33 +166,29 @@ class UserView(GenericAPIView):
     def get(self, request):
         search_param = request.query_params.get('search', '')
         user_id = request.data.get('user_id')
-        # is_blocked=request.query_params.get('blocked','')
         if search_param:
-            users = self.queryset.filter(username__icontains=search_param)
-            serializer = self.serializer_class(users, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        # elif is_blocked:
-        #     breakpoint()
-        #     if is_blocked.lower() == 'true':
-        #         users=self.queryset.filter(is_active=False)
-        #         serializer=self.serializer_class(users,many=True)
-        #         return Response(data=serializer.data,status=status.HTTP_200_OK)
-        #     elif is_blocked.lower() == 'false':
-        #         users=self.queryset.filter(is_active=False)
-        #         serializer=self.serializer_class(users,many=True)
-        #         return Response(data=serializer.data,status=status.HTTP_200_OK)
-        #     else:
-        #         response={
-        #             'message':'Invalid parameter for is_blocked parameter',
-        #         }
-        #         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
-        if user_id is None:
-            serializer = self.serializer_class(self.get_queryset(), many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        else:
+            users = self.queryset.filter(Q(username__icontains=search_param) | Q(email__icontains=search_param))
+            if users.exists():
+                serializer = self.serializer_class(users, many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        elif user_id:
             user = get_object_or_404(self.get_queryset(), id=user_id)
             serializer = self.serializer_class(user)
             return Response(data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            if self.get_queryset().exists():
+                serializer = self.serializer_class(self.get_queryset(), many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
 
 
 class BlockUser(GenericAPIView):
@@ -231,22 +246,40 @@ class UnblockUser(GenericAPIView):
 class WorkerView(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = WorkerSerializer
-    queryset = Users.objects.filter(Q(is_staff=True) & Q(is_verified=True)).select_related('worker').all()
-
+    # queryset = Users.objects.filter(Q(is_staff=True) & Q(is_verified=True)).select_related('worker').all()
+    queryset = Users.objects.filter(Q(is_staff=True) & Q(is_verified=True)).all()
     def get(self, request):
         worker_id = request.data.get('worker_id')
         search_param = request.data.get('search')
         if search_param:
-            workers = self.queryset.filter(username__icontains=search_param)
-            serializer = self.serializer_class(workers, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        if worker_id is None:
-            serializer = self.serializer_class(self.get_queryset(), many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        else:
+            workers = self.get_queryset().filter(Q(username__icontains=search_param) | Q(email__icontains=search_param))
+            if workers.exists():
+                serializer = self.serializer_class(workers, many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        elif worker_id:
             worker = get_object_or_404(self.get_queryset(), id=worker_id)
-            serializer = self.serializer_class(worker)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            if worker.exists():
+                serializer = self.serializer_class(worker)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
+        else:
+            if self.get_queryset().exists():
+                serializer = self.serializer_class(self.get_queryset(), many=True)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            response={
+                'status':404,
+                'message':'No data found'
+            }
+            return Response(data=response,status=status.HTTP_404_NOT_FOUND)
 
 
 class BlockWorker(GenericAPIView):
@@ -270,7 +303,7 @@ class BlockWorker(GenericAPIView):
         else:
             response = {
                 'status': 400,
-                'message': 'Worker is already blocked'
+                'message': 'Worker is already blocked or not confirmed'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
@@ -317,7 +350,7 @@ class Bookings(GenericAPIView):
         else:
             response = {
                 'status': 200,
-                'message': 'This is empty'
+                'message': 'No data found'
             }
             return Response(data=response)
 
