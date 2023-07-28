@@ -54,6 +54,7 @@ class UserSignUpView(GenericAPIView):
             return Response(data=response,status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
+
 class UserVerifyotp(APIView):
     serializer_class=VerifyAccountSerializer
     def post(self,request):
