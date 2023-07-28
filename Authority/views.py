@@ -27,20 +27,17 @@ class AuthorityLoginApiview(APIView):
         user = authenticate(email=email, password=password)
         if user is None:
             response = {
-                'status': 400,
                 'message': 'Invalid email or password'
             }
             return Response(data=response, status=status.HTTP_401_UNAUTHORIZED)
         elif not (user.is_superuser and user.is_verified):
             response = {
-                'status': 400,
                 'message': 'You are not authorized to perform this action'
             }
             return Response(data=response, status=status.HTTP_401_UNAUTHORIZED)
         else:
             tokens = RefreshToken.for_user(user)
             response = {
-                'status': 200,
                 'message': 'Authority Login successfully',
                 'access': str(tokens.access_token),
                 'refresh': str(tokens)
@@ -57,13 +54,11 @@ class AuthorityLogoutView(APIView):
             token_object = RefreshToken(refresh_token)
             token_object.blacklist()
             response = {
-                'status': 200,
                 'message': 'Authority logged out successfully'
             }
             return Response(data=response, status=status.HTTP_200_OK)
         except:
             response = {
-                'status': 400,
                 'message': 'Authority logout failed'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -82,7 +77,6 @@ class CategoryView(GenericAPIView):
             # Check if category already exists (case-insensitive)
             if self.queryset.filter(category__iexact=category_lower).exists():
                 response = {
-                    'status': 400,
                     'message': 'Category already exists'
                 }
                 return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -90,7 +84,6 @@ class CategoryView(GenericAPIView):
                 cat = Job_Category(category=category)
                 cat.save()
                 response = {
-                    'status': 201,
                     'message': 'New category added successfully'
                 }
                 return Response(data=response, status=status.HTTP_201_CREATED)
@@ -106,7 +99,6 @@ class CategoryView(GenericAPIView):
                 serializer = self.serializer_class(category, many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -119,7 +111,6 @@ class CategoryView(GenericAPIView):
                 serializer = self.serializer_class(self.get_queryset(), many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -131,13 +122,11 @@ class CategoryView(GenericAPIView):
                 cat = Job_Category.objects.get(id=cat_id)
             except:
                 response={
-                    'status':400,
                     'message':'wrong category id'
                 }
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
             cat.delete()
             response = {
-                'status': 200,
                 'message': 'Category deleted successfully'
             }
             return Response(data=response, status=status.HTTP_200_OK)
@@ -150,7 +139,6 @@ class CategoryView(GenericAPIView):
         if serializer.is_valid():
             serializer.save()
             response = {
-                'status': 200,
                 'message': 'Category updated successfully',
                 'data': serializer.data
             }
@@ -172,7 +160,6 @@ class UserView(GenericAPIView):
                 serializer = self.serializer_class(users, many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -185,7 +172,6 @@ class UserView(GenericAPIView):
                 serializer = self.serializer_class(self.get_queryset(), many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -204,14 +190,12 @@ class BlockUser(GenericAPIView):
             user.save()
             serializer = self.serializer_class(user)
             response = {
-                'status': 200,
                 'message': 'User blocked successfully',
                 'data': serializer.data
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             response = {
-                'status': 400,
                 'message': 'User is already blocked'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -230,14 +214,12 @@ class UnblockUser(GenericAPIView):
             user.save()
             serializer = self.serializer_class(user)
             response = {
-                'status': 200,
                 'message': 'User unblocked successfully',
                 'data': serializer.data
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             response = {
-                'status': 400,
                 'message': 'User is already active'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -257,7 +239,6 @@ class WorkerView(GenericAPIView):
                 serializer = self.serializer_class(workers, many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -267,7 +248,6 @@ class WorkerView(GenericAPIView):
                 serializer = self.serializer_class(worker)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -276,7 +256,6 @@ class WorkerView(GenericAPIView):
                 serializer = self.serializer_class(self.get_queryset(), many=True)
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             response={
-                'status':404,
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -295,14 +274,12 @@ class BlockWorker(GenericAPIView):
             worker.save()
             serializer = self.serializer_class(worker)
             response = {
-                'status': 200,
                 'message': 'Worker blocked successfully',
                 'data': serializer.data
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             response = {
-                'status': 400,
                 'message': 'Worker is already blocked or not confirmed'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -321,14 +298,12 @@ class UnblockWorker(GenericAPIView):
             worker.save()
             serializer = self.serializer_class(worker)
             response = {
-                'status': 200,
                 'message': 'Worker unblocked successfully',
                 'data': serializer.data
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             response = {
-                'status': 400,
                 'message': 'Worker is alredy active'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -349,7 +324,6 @@ class Bookings(GenericAPIView):
             return Response(data=serializer.data)
         else:
             response = {
-                'status': 200,
                 'message': 'No data found'
             }
             return Response(data=response)
@@ -361,13 +335,11 @@ class Bookings(GenericAPIView):
             booking = Booking.objects.get(pk=booking_id)
         except Exception:
             response = {
-                'status': 404,
                 'message': 'Booking not found.'
             }
             return Response(data=response, status=status.HTTP_404_NOT_FOUND)
         if booking.status == 'terminated':
             response = {
-                'status': 400,
                 'message': 'Booking is already terminated'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -380,19 +352,16 @@ class Bookings(GenericAPIView):
             if chat_room:
                 chat_room.delete()
             response = {
-                'status': 200,
                 'message': 'Booking terminated successfully.'
             }
             return Response(data=response, status=status.HTTP_200_OK)
         elif reason is None:
             response = {
-                'status': 400,
                 'message': 'Please provide the reason for termination.'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
         else:
             response = {
-                'status': 400,
                 'message': 'The booking status is completed so you cant terminate it.'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
@@ -415,19 +384,16 @@ class AuthorityPrivacy(GenericAPIView):
                     user.set_password(new_password)
                     user.save()
                     response = {
-                        'status': 200,
                         'message': 'Your Password Updated successfully'
                     }
                     return Response(data=response, status=status.HTTP_200_OK)
                 else:
                     response = {
-                        'status': 400,
                         'message': 'New password and confirm password are not matching'
                     }
                     return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
             else:
                 response = {
-                    'status': 400,
                     'message': 'You have provided the wrong password'
                 }
                 return Response(data=response, status=status.HTTP_400_BAD_REQUEST)

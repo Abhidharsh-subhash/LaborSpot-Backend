@@ -34,7 +34,6 @@ class WorkerSignUpView(GenericAPIView):
                 serializer.instance.delete()
                 raise APIException('Failed to send otp to your phone. Register again')
             response={
-                'status':201,
                 'message':'Worker registered successfully,Confrim by entering your Otp',
                 'warning':'OTP is valid only for 5 minutes'
             }
@@ -53,7 +52,6 @@ class WorkerVerifyotp(APIView):
                 user=worker.worker
                 if not worker:
                     response={
-                        'status':400,
                         'message':'Invalid Phone number'
                     }
                     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -69,7 +67,6 @@ class WorkerVerifyotp(APIView):
                         expiration_date=otp_expiration_kolkata.date()
                         if current_date >= expiration_date and  expiration_time < current_time:
                             response = {
-                                'status': 400,
                                 'message': 'OTP has expired,You can resend the otp',
                                 'expiration':expiration_time,
                                 'currrent':current_time
@@ -81,19 +78,16 @@ class WorkerVerifyotp(APIView):
                             user.otp_expiration=None
                             user.save()
                             response={
-                                'status':200,
                                 'message':'Otp Verified you can login with your credentials'
                             }
                             return Response(data=response,status=status.HTTP_200_OK)
                 elif user.otp == None:
                         response={
-                            'status':226,
                             'message':'You are already verified'
                         }
                         return Response(data=response,status=status.HTTP_226_IM_USED)
                 else:
                         response={
-                            'status':400,
                             'message':'Wrong otp'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -112,7 +106,6 @@ class ResendOtp(GenericAPIView):
             except:
                 raise APIException('Failed to send otp to your phone. Try again')
             response={
-                'status':200,
                 'message':'Otp resend successfull',
                 'warning':'OTP is valid for only 5 minutes'
             }
@@ -128,7 +121,6 @@ class WorkerLoginView(GenericAPIView):
         user=serializer.validated_data['user']
         tokens=RefreshToken.for_user(user)
         response={
-            'status':200,
             'message':'Worker login successfull',
             'access':str(tokens.access_token),
             'refresh':str(tokens),
@@ -142,38 +134,32 @@ class ForgotPassword(GenericAPIView):
         serializer=self.serializer_class(data=data)
         if serializer.is_valid():
             response={
-            'status':200,
             'message':'Otp sent successfully.You can change the password using the otp.'
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
-                'status':400,
                 'message':'Something went wrong'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyForgototpandchange(GenericAPIView):
-    permission_classes=[IsWorker]
     serializer_class=VerifyForgotchangeserializer
     def patch(self,request):
         data=request.data
         if not bool(data):
             response={
-                'status':400,
                 'message':'Please provide the credentials.'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         serializer=self.serializer_class(data=data)
         if serializer.is_valid(raise_exception=True):
             response={
-                'status':200,
                 'message':'otp verified and password updated successfully'
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
-                'status':400,
                 'message':'Please try again'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -191,7 +177,6 @@ class WorkerProfile(APIView):
         if serializer.is_valid():
             serializer.save()
             response={
-                'status' : 200,
                 'message':'Your profile updated successfully'
             }
             return Response(data=response,status=status.HTTP_200_OK)
@@ -212,19 +197,16 @@ class WorkerPrivacy(GenericAPIView):
                     worker.set_password(new_password)
                     worker.save()
                     response={
-                        'status':200,
                         'message':'Your Password Updated successfully'
                     }
                     return Response(data=response,status=status.HTTP_200_OK)
                 else:
                     response={
-                        'status':400,
                         'message':'New password and confirm password are not matching'
                     }
                     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
             else:
                 response={
-                    'status':400,
                     'message':'You have provided the wrong password'
                 }
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -241,7 +223,6 @@ class WorkRequests(GenericAPIView):
             bookings=Booking.objects.filter(worker=worker,status=status)
             if not bookings:
                 response={
-                    'status':404,
                     'message':'No data found'
                 }
                 return Response(data=response)
@@ -249,7 +230,6 @@ class WorkRequests(GenericAPIView):
             return Response(data=serializer.data)
         else:
             response={
-                'status':400,
                 'message':'Please provide the status to be filtered'
             }
             return Response(data=response)
@@ -261,7 +241,6 @@ class WorkRequests(GenericAPIView):
             booking=Booking.objects.get(id=booking_id,status='pending')
         except Booking.DoesNotExist:
             response={
-                'status':400,
                 'message':'Incorrect booking or Requested booking cant perform this action'
             }
             return Response(data=response)
@@ -274,8 +253,7 @@ class WorkRequests(GenericAPIView):
             #     chat_room.users.add(admin.id)
             #     chat_room.users.add(worker)
             response={
-            'status':201,
-            'message':'Work accepted successfully'
+                'message':'Work accepted successfully'
             }
             return Response(data=response)
         elif status == 'reject':
@@ -286,19 +264,16 @@ class WorkRequests(GenericAPIView):
                 booking.status='rejected'
                 booking.save()
                 response={
-                'status':201,
                 'message':'Work rejected successfully'
                 }
                 return Response(data=response)
             else:
                 response={
-                    'status':400,
                     'message':'Please provide the reason to reject the booking'
                 }
                 return Response(data=response)
         else:
             response={
-                'status':400,
                 'message':'Please provide a valid status'
             }
             return Response(data=response)

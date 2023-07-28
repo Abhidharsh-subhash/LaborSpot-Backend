@@ -48,7 +48,6 @@ class UserSignUpView(GenericAPIView):
                 serializer.instance.delete()
                 raise APIException('Failed to send otp mail. Register again')
             response={
-                'status':201,
                 'message':'User registration successfull,check email and verify by otp',
                 'warning':'OTP is valid for only 5 minutes'
             }
@@ -67,7 +66,6 @@ class UserVerifyotp(APIView):
                 user = get_object_or_404(Users, email=email)
                 if not user:
                         response={
-                            'status':400,
                             'message':'Invalid Email address'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -83,7 +81,6 @@ class UserVerifyotp(APIView):
                         expiration_date=otp_expiration_kolkata.date()
                         if current_date >= expiration_date and  expiration_time < current_time:
                             response = {
-                                'status': 400,
                                 'message': 'OTP has expired,You can resend the otp'
                                 
                             }
@@ -94,25 +91,21 @@ class UserVerifyotp(APIView):
                             user.otp_expiration=None
                             user.save()
                             response={
-                                'status':200,
                                 'message':'Otp Verified you can login with your credentials'
                             }
                             return Response(data=response,status=status.HTTP_200_OK)
                 elif user.otp == None:
                         response={
-                            'status':226,
                             'message':'You are already verified'
                         }
                         return Response(data=response,status=status.HTTP_226_IM_USED)
                 else:
                         response={
-                            'status':400,
                             'message':'Wrong otp'
                         }
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         except:
             response={
-                'status':400,
                 'message':'Something went wrong'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -130,7 +123,6 @@ class ResendOtp(GenericAPIView):
             except:
                 raise APIException('Failed to send otp to mail.Try again')
             response={
-                'status':200,
                 'message':'Resend otp successfull',
                 'warning':'OTP is valid for only 5 minutes'
             }  
@@ -155,7 +147,6 @@ class UserLoginView(APIView):
         #     status=status.HTTP_200_OK
         # )
         response={
-            'status':200,
             'message':'User login successful',
             'access':str(tokens.access_token),
             'refresh':str(tokens)
@@ -190,7 +181,6 @@ class ForgotPasswordEmail(GenericAPIView):
             }
             return Response(data=response,status=status.HTTP_200_OK)
         response={
-            'status':400,
             'message':'Invalid mail id'
         }
         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -204,12 +194,10 @@ class PasswordTokenCheck(GenericAPIView):
             user=Users.objects.get(id=id)
             if not PasswordResetTokenGenerator().check_token(user,token):
                 response={
-                    'status':401,
                     'message':'Toke is not valid request a new one'
                 }
                 return Response(data=response,status=status.HTTP_401_UNAUTHORIZED)
             response={
-                'status':200,
                 'success':True,
                 'message':'Credentials valid',
                 'uidb64':uidb64,
@@ -219,7 +207,6 @@ class PasswordTokenCheck(GenericAPIView):
         except DjangoUnicodeDecodeError as identifier:
             if not PasswordResetTokenGenerator().check_token(user):
                 response={
-                    'status':401,
                     'message':'Token is not valid request a new one'
                 }
                 return Response(data=response,status=status.HTTP_401_UNAUTHORIZED)
@@ -230,7 +217,6 @@ class SetNewPassword(GenericAPIView):
         serializer=self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         response={
-            'status':200,
             'message':'Password reset successfully completed',
         }
         return Response(data=response,status=status.HTTP_200_OK)
@@ -254,7 +240,6 @@ class WorkerList(GenericAPIView):
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
             else:
                 response={
-                    'status':404,
                     'message':'No data found'
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -269,7 +254,6 @@ class WorkerList(GenericAPIView):
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
             else:
                 response={
-                    'status':404,
                     'message':'No data found'
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -284,7 +268,6 @@ class WorkerList(GenericAPIView):
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             else:
                 response={
-                    'status':404,
                     'message':'No data found'
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -298,7 +281,6 @@ class WorkerList(GenericAPIView):
                 return Response(data=serializer.data, status=status.HTTP_200_OK)
             else:
                 response={
-                    'status':404,
                     'message':'No data found'
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -309,7 +291,6 @@ class WorkerList(GenericAPIView):
                 return Response(data=serializer.data,status=status.HTTP_200_OK)
             else:
                 response={
-                    'status':404,
                     'message':'No data found'
                 }
                 return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -327,7 +308,6 @@ class UserProfileView(APIView):
         if serializer.is_valid():
             serializer.save()
             response={
-                'status' : 200,
                 'message':'Your profile updated successfully'
             }
             return Response(data=response,status=status.HTTP_200_OK)
@@ -349,19 +329,16 @@ class UserPrivacy(GenericAPIView):
                     user.set_password(new_password)
                     user.save()
                     response={
-                        'status':200,
                         'message':'Your Password Updated successfully'
                     }
                     return Response(data=response,status=status.HTTP_200_OK)
                 else:
                     response={
-                        'status':400,
                         'message':'New password and confirm password are not matching'
                     }
                     return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
             else:
                 response={
-                    'status':400,
                     'message':'You have provided the wrong password'
                 }
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -459,12 +436,10 @@ class WorkerBooking(GenericAPIView):
             next_available_time = self.get_next_available_time(worker.id, datetime_from)
             if next_available_time:
                 response = {
-                    'status': 226,
                     'message': 'Time slot is not available. Next available time slot: {}'.format(next_available_time),
                 }
             else:
                 response = {
-                    'status': 226,
                     'message': 'Time slot is not available. No further available time slots.',
                 }
             return Response(data=response, status=status.HTTP_226_IM_USED)
@@ -514,7 +489,6 @@ class BookingHistory(GenericAPIView):
             serializer=self.serializer_class(bookings,many=True)
             return Response(data=serializer.data)
         response={
-            'status':404,
             'message':'No data found'
         }
         return Response(data=response)
@@ -526,7 +500,6 @@ class BookingHistory(GenericAPIView):
             booking=Booking.objects.get(user=user,pk=booking_id,status='pending')
         except Booking.DoesNotExist:
             response={
-                'status':404,
                 'message':'Booking not found or cannot be cancelled.'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
@@ -535,13 +508,11 @@ class BookingHistory(GenericAPIView):
             booking.cancellation_reason=reason
             booking.save()
             response={
-                'status':200,
                 'message':'Booking has been cancelled successfully.'
             }
             return Response(data=response,status=status.HTTP_200_OK)
         else:
             response={
-                'status':400,
                 'message':'Please provide the reason for cancellation'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -556,14 +527,12 @@ class CompleteFeedback(GenericAPIView):
             booking=Booking.objects.get(pk=booking_id)
         except Booking.DoesNotExist:
             response={
-                'status':400,
                 'message':'booking_id does not exist'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         if booking.status == 'accepted':
             if feedback is None:
                 response={
-                    'status':400,
                     'message':'Please provide the feedback before marking it as completed'
                 }
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -575,19 +544,16 @@ class CompleteFeedback(GenericAPIView):
                 booking.feedback=feedback
                 booking.save()
                 response={
-                    'status':200,
                     'message':'Service completed successfully'
                 }
                 return Response(data=response,status=status.HTTP_200_OK)
             else:
                 response={
-                    'status':400,
                     'message':'You are trying to complete the wrong work'
                 }
                 return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         else:
             response={
-                'status':400,
                 'message':'Having some problem related to booking'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -596,8 +562,6 @@ class Makepayment(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=PaymentSerializer
     def post(self,request):
-        
-        breakpoint()
         user=request.user.id
         booking_id=request.data.get('booking_id')
         wage=request.data.get('wage')
@@ -605,31 +569,26 @@ class Makepayment(GenericAPIView):
             booking=Booking.objects.get(user=user,booking_id=booking_id)
         except Booking.DoesNotExist:
             response={
-                'status':400,
                 'messsage':'Booking id not found'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         if booking.payment_amount != int(wage):
             response={
-                'status':400,
                 'message':'Incorrect payment amount provided'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         elif booking.payment_status == 'completed':
             response={
-                'status':400,
                 'message':'Payment already completed'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         elif booking.status == 'cancelled' or booking.status == 'terminated':
             response={
-                'status':400,
                 'message':'Booking already cancelled'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         elif booking.status == 'pending':
             response={
-                'status':400,
                 'message':'Payment can be done only after the work is completed'
             }
             return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
@@ -663,13 +622,11 @@ class Makepayment(GenericAPIView):
             print(paypal_payment)
             approval_url = next(link.href for link in paypal_payment.links if link.rel == 'approval_url')
             response = {
-                'status': 200,
                 'approval_url': approval_url
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             response = {
-                'status': 500,
                 'message': 'Failed to create PayPal payment'
             }
             return Response(data=paypal_payment.error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -699,14 +656,12 @@ class PaymentConfirmation(APIView):
             booking.save()
 
             response = {
-                'status': 200,
                 'message': 'Payment confirmed'
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             # Payment confirmation failed
             response = {
-                'status': 400,
                 'message': 'Payment confirmation failed'
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
