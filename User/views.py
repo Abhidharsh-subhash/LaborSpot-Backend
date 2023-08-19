@@ -33,10 +33,12 @@ import string,secrets
 import paypalrestsdk
 import pytz
 from decouple import config
+from drf_yasg.utils import swagger_auto_schema
 # Create your views here.
 
 class UserSignUpView(GenericAPIView):
     serializer_class=SignUpSerializer
+    @swagger_auto_schema(operation_summary='User Signup.')
     def post(self,request:Request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -54,9 +56,9 @@ class UserSignUpView(GenericAPIView):
             return Response(data=response,status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
-
 class UserVerifyotp(APIView):
     serializer_class=VerifyAccountSerializer
+    @swagger_auto_schema(operation_summary='OTP verfication after User Signup.')
     def post(self,request):
         try:
             data=request.data
@@ -113,6 +115,7 @@ class UserVerifyotp(APIView):
         
 class ResendOtp(GenericAPIView):
     serializer_class=ResendOtpSerializer
+    @swagger_auto_schema(operation_summary='Resend the OTP if expired.')
     def post(self,request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -132,6 +135,7 @@ class ResendOtp(GenericAPIView):
     
 class UserLoginView(APIView):
     serializer_class=UserLoginSerializer
+    @swagger_auto_schema(operation_summary='User Login.')
     def post(self,request:Request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -160,6 +164,7 @@ class UserLoginView(APIView):
     
 class ForgotPasswordEmail(GenericAPIView):  
     serializer_class=ForgotPasswordSerializer
+    @swagger_auto_schema(operation_summary='Forgot Password for User.')
     def post(self,request):
         serializer=self.serializer_class(data=request.data)
         email = request.data.get('email', '')
@@ -187,6 +192,7 @@ class ForgotPasswordEmail(GenericAPIView):
         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordTokenCheck(GenericAPIView):
+    @swagger_auto_schema(operation_summary='Vefiry Forgot Password link send to E-mail.')
     def get(self,request):
         uidb64 = request.data.get('uidb64')
         token = request.data.get('token')
@@ -214,6 +220,7 @@ class PasswordTokenCheck(GenericAPIView):
             
 class SetNewPassword(GenericAPIView):
     serializer_class=SetNewPasswordSerializer
+    @swagger_auto_schema(operation_summary='Setting New Password.')
     def patch(self,request):
         serializer=self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -226,6 +233,7 @@ class WorkerList(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=WorkerListSerializer
     queryset=Users.objects.filter(Q(is_staff=True) & Q(is_verified=True) & Q(is_active=True)).select_related('worker').all()
+    @swagger_auto_schema(operation_summary='List of Workers.')
     def get(self,request):
         search_param=request.data.get('search')
         category_id = request.data.get('category_id')
@@ -299,10 +307,12 @@ class WorkerList(GenericAPIView):
 class UserProfileView(APIView):
     permission_classes = [IsUser]
     serializer_class=UserProfileSerializer
+    @swagger_auto_schema(operation_summary='User Profile view.')
     def get(self, request):
         user = request.user
         serializer = self.serializer_class(user)
         return Response(serializer.data)
+    @swagger_auto_schema(operation_summary='User Profile Update.')
     def patch(self, request):
         user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)
@@ -317,6 +327,7 @@ class UserProfileView(APIView):
 class UserPrivacy(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=UserPrivacySerializer
+    @swagger_auto_schema(operation_summary='Change User password.')
     def patch(self,request):
         user = request.user
         serializer=self.serializer_class(user,data=request.data)
@@ -398,6 +409,7 @@ class WorkerBooking(GenericAPIView):
                 current_time = datetime.strptime('08:00', '%H:%M').time()
 
         return None
+    @swagger_auto_schema(operation_summary='Booking the Worker by User.')
     def post(self, request):
         worker = request.data.get('worker')
         try:
@@ -479,6 +491,7 @@ class WorkerBooking(GenericAPIView):
 class BookingHistory(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=BookingHistorySerializer
+    @swagger_auto_schema(operation_summary='Display Booking history.')
     def get(self,request):
         user=request.user.id
         status=request.data.get('status')
@@ -493,6 +506,7 @@ class BookingHistory(GenericAPIView):
             'message':'No data found'
         }
         return Response(data=response)
+    @swagger_auto_schema(operation_summary='Booking cancellation.')
     def post(self,request):
         user=request.user.id
         booking_id=request.data.get('booking_id')
@@ -521,6 +535,7 @@ class BookingHistory(GenericAPIView):
 class CompleteFeedback(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=CompleteFeedbackSerializer
+    @swagger_auto_schema(operation_summary='Booking Feedback.')
     def patch(self,request):
         booking_id=request.data.get('booking_id')
         feedback=request.data.get('feedback')
@@ -562,6 +577,7 @@ class CompleteFeedback(GenericAPIView):
 class Makepayment(GenericAPIView):
     permission_classes=[IsUser]
     serializer_class=PaymentSerializer
+    @swagger_auto_schema(operation_summary='Making Payment.')
     def post(self,request):
         user=request.user.id
         booking_id=request.data.get('booking_id')
@@ -637,6 +653,7 @@ class PaymentConfirmation(APIView):
     Endpoint to confirm PayPal payment status
     """
     permission_classes=[IsUser]
+    @swagger_auto_schema(operation_summary='Payment Confirmation.')
     def post(self, request):
         payment_id = request.data.get('payment_id')
         payer_id = request.data.get('payer_id')

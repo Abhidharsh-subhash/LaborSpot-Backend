@@ -34,13 +34,13 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Job_Category
         fields = '__all__'
 
-class JobCategorySerializer(serializers.ModelSerializer):
+class JobcategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Job_Category
         fields = ['category'] 
 
 class WorkerSerializer(serializers.ModelSerializer):
-    category = JobCategorySerializer(source='worker.category')
+    category = JobcategorySerializer(source='worker.category')
     experience=serializers.SerializerMethodField()
     charge=serializers.SerializerMethodField()
     phone_number=serializers.SerializerMethodField()
@@ -66,7 +66,7 @@ class WorkerSerializer(serializers.ModelSerializer):
         model=Users
         fields=['id','username','email','is_active','category','experience','charge','phone_number']
 
-class BookingSerializer(serializers.ModelSerializer):
+class Bookingserializer(serializers.ModelSerializer):
     username=serializers.SerializerMethodField()
     workername=serializers.SerializerMethodField()
     def get_username(self,obj):

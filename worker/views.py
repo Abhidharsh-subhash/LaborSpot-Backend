@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from.serializers import SignupSerializer,ResendOtpSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotPasswordSerializer,WorkerProfileSerializer,BookingSerializer,WorkerPrivacySerializer,VerifyForgotchangeserializer
+from.serializers import SignupSerializer,ResendotpSerializer,WorkerLoginSerializer,VerifyAccountSerializer,ForgotpasswordSerializer,WorkerProfileSerializer,BookingsSerializer,WorkerPrivacySerializer,VerifyForgotchangeserializer
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -18,11 +18,13 @@ from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from pytz import timezone
 import pytz
+from drf_yasg.utils import swagger_auto_schema
 
 # Create your views here.
 
 class WorkerSignUpView(GenericAPIView):
     serializer_class=SignupSerializer
+    @swagger_auto_schema(operation_summary='Worker Signup.')
     def post(self,request:Request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -42,6 +44,7 @@ class WorkerSignUpView(GenericAPIView):
     
 class WorkerVerifyotp(APIView):
     serializer_class=VerifyAccountSerializer
+    @swagger_auto_schema(operation_summary='Verify Mobile OTP for Signup completion.')
     def post(self,request):
             data=request.data
             serializer=self.serializer_class(data=data)
@@ -93,7 +96,8 @@ class WorkerVerifyotp(APIView):
                         return Response(data=response,status=status.HTTP_400_BAD_REQUEST)
         
 class ResendOtp(GenericAPIView):
-    serializer_class=ResendOtpSerializer
+    serializer_class=ResendotpSerializer
+    @swagger_auto_schema(operation_summary='Resend OTP if expired.')
     def post(self,request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -114,6 +118,7 @@ class ResendOtp(GenericAPIView):
     
 class WorkerLoginView(GenericAPIView):
     serializer_class=WorkerLoginSerializer
+    @swagger_auto_schema(operation_summary='Worker Login.')
     def post(self,request:Request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -128,7 +133,8 @@ class WorkerLoginView(GenericAPIView):
         return Response(data=response,status=status.HTTP_200_OK)
     
 class ForgotPassword(GenericAPIView):
-    serializer_class=ForgotPasswordSerializer
+    serializer_class=ForgotpasswordSerializer
+    @swagger_auto_schema(operation_summary='Requestiong new OTP for Forgot Password.')
     def patch(self,request):
         data=request.data
         serializer=self.serializer_class(data=data)
@@ -145,6 +151,7 @@ class ForgotPassword(GenericAPIView):
 
 class VerifyForgototpandchange(GenericAPIView):
     serializer_class=VerifyForgotchangeserializer
+    @swagger_auto_schema(operation_summary='Verify Forgot Password by entering the OTP.')
     def patch(self,request):
         data=request.data
         if not bool(data):
@@ -167,10 +174,12 @@ class VerifyForgototpandchange(GenericAPIView):
 class WorkerProfile(APIView):
     permission_classes = [IsWorker]
     serializer_class=WorkerProfileSerializer
+    @swagger_auto_schema(operation_summary='Get Worker Profile.')
     def get(self, request):
         user = request.user
         serializer = self.serializer_class(user)
         return Response(serializer.data)
+    @swagger_auto_schema(operation_summary='Edit Worker Profile.')
     def patch(self, request):
         user = request.user
         serializer = self.serializer_class(user, data=request.data, partial=True)
@@ -185,6 +194,7 @@ class WorkerProfile(APIView):
 class WorkerPrivacy(GenericAPIView):
     permission_classes=[IsWorker]
     serializer_class=WorkerPrivacySerializer
+    @swagger_auto_schema(operation_summary='Change Worker Password.')
     def patch(self,request):
         worker=request.user
         serializer=self.serializer_class(worker,data=request.data)
@@ -215,7 +225,8 @@ class WorkerPrivacy(GenericAPIView):
 
 class WorkRequests(GenericAPIView):
     permission_classes=[IsWorker]
-    serializer_class=BookingSerializer
+    serializer_class=BookingsSerializer
+    @swagger_auto_schema(operation_summary='Display the Pending bookings to be accepted or rejected.')
     def get(self,request):
         status=request.data.get('status')
         if status is not None:
@@ -233,6 +244,7 @@ class WorkRequests(GenericAPIView):
                 'message':'Please provide the status to be filtered'
             }
             return Response(data=response)
+    @swagger_auto_schema(operation_summary='Booking can be accepted or rejected by the Worker.')
     def patch(self,request):
         booking_id=request.data.get('booking_id')
         status=request.data.get('status')

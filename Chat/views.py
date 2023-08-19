@@ -7,7 +7,11 @@ from django.http import JsonResponse
 from .models import chatroom, ChatMessage
 from Authority.models import Users
 from .serializers import *
+from drf_yasg.utils import swagger_auto_schema
+
 class ChatMessageView(GenericAPIView):
+    serializer_class=MessageSerializer
+    @swagger_auto_schema(operation_summary='Chat message sending.')
     def post(self, request):
         room_name = request.data.get('room_name')
         sender_id = request.data.get('sender_id')
@@ -34,7 +38,7 @@ class ChatMessageView(GenericAPIView):
             return JsonResponse({'success': False, 'message': 'Chat room does not exist.'})
         except Users.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Sender user does not exist.'})
-
+    @swagger_auto_schema(operation_summary='Get the messages for the whole chat.')
     def get(self, request):
         room_name = request.data.get('room_name')
         try:

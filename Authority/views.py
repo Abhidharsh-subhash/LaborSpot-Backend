@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from Chat.models import chatroom
 from .models import Users, Job_Category, Booking
 from .permissions import IsAuthority
-from .serializers import UserSerializer, CategorySerializer, WorkerSerializer, LoginSerializer, BookingSerializer, \
+from .serializers import UserSerializer, CategorySerializer, WorkerSerializer, LoginSerializer, Bookingserializer, \
     PrivacySerializer
 
 
@@ -21,6 +21,7 @@ from .serializers import UserSerializer, CategorySerializer, WorkerSerializer, L
 
 class AuthorityLoginApiview(APIView):
     serializer_class = LoginSerializer
+    @swagger_auto_schema(operation_summary='Authority Login.')
     def post(self, request: Request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -47,7 +48,7 @@ class AuthorityLoginApiview(APIView):
 
 class AuthorityLogoutView(APIView):
     permission_classes = [IsAuthority]
-
+    @swagger_auto_schema(operation_summary='Authority Logout.')
     def post(self, request):
         try:
             refresh_token = request.data.get('refresh_token')
@@ -68,7 +69,7 @@ class CategoryView(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = CategorySerializer
     queryset = Job_Category.objects.all()
-
+    @swagger_auto_schema(operation_summary='Create new Category.')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -89,7 +90,7 @@ class CategoryView(GenericAPIView):
                 return Response(data=response, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    @swagger_auto_schema(operation_summary='Display Category list.')
     def get(self, request):
         search_param = request.data.get('search')
         cat_id = request.data.get('cat_id')
@@ -114,7 +115,7 @@ class CategoryView(GenericAPIView):
                 'message':'No data found'
             }
             return Response(data=response,status=status.HTTP_404_NOT_FOUND)
-
+    @swagger_auto_schema(operation_summary='Delete Category.')
     def delete(self, request):
         cat_id = request.data.get('cat_id')
         if cat_id:
@@ -130,7 +131,7 @@ class CategoryView(GenericAPIView):
                 'message': 'Category deleted successfully'
             }
             return Response(data=response, status=status.HTTP_200_OK)
-
+    @swagger_auto_schema(operation_summary='Update Category.')
     def put(self, request):
         cat_id = request.data.get('cat_id')
         cat = get_object_or_404(Job_Category, pk=cat_id)
@@ -150,7 +151,7 @@ class UserView(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = UserSerializer
     queryset = Users.objects.filter(is_user=1, is_verified=True).select_related('user').all()
-
+    @swagger_auto_schema(operation_summary='List of verified Users.')
     def get(self, request):
         search_param = request.data.get('search')
         user_id = request.data.get('user_id')
@@ -181,7 +182,7 @@ class BlockUser(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = UserSerializer
     queryset = Users.objects.filter(is_user=1).all()
-
+    @swagger_auto_schema(operation_summary='Block Specific User.')
     def patch(self, request):
         user_id = request.data.get('user_id')
         user = get_object_or_404(self.get_queryset(), id=user_id)
@@ -205,7 +206,7 @@ class UnblockUser(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = UserSerializer
     queryset = Users.objects.filter(is_user=1).all()
-
+    @swagger_auto_schema(operation_summary='Unblock the specific blocked user.')
     def patch(self, request):
         user_id = request.data.get('user_id')
         user = get_object_or_404(self.get_queryset(), id=user_id)
@@ -230,6 +231,7 @@ class WorkerView(GenericAPIView):
     serializer_class = WorkerSerializer
     # queryset = Users.objects.filter(Q(is_staff=True) & Q(is_verified=True)).select_related('worker').all()
     queryset = Users.objects.filter(Q(is_staff=True) & Q(is_verified=True)).all()
+    @swagger_auto_schema(operation_summary='list of verified Workers.')
     def get(self, request):
         worker_id = request.data.get('worker_id')
         search_param = request.data.get('search')
@@ -265,7 +267,7 @@ class BlockWorker(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = WorkerSerializer
     queryset = Users.objects.filter(is_staff=True).all()
-
+    @swagger_auto_schema(operation_summary='Block specific worker.')
     def patch(self, request):
         worker_id = request.data.get('worker_id')
         worker = get_object_or_404(self.get_queryset(), id=worker_id)
@@ -289,7 +291,7 @@ class UnblockWorker(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = WorkerSerializer
     queryset = Users.objects.filter(is_staff=True).all()
-
+    @swagger_auto_schema(operation_summary='Unblock the specific blocked worker.')
     def patch(self, request):
         worker_id = request.data.get('worker_id')
         worker = get_object_or_404(self.get_queryset(), id=worker_id)
@@ -311,8 +313,8 @@ class UnblockWorker(GenericAPIView):
 
 class Bookings(GenericAPIView):
     permission_classes = [IsAuthority]
-    serializer_class = BookingSerializer
-
+    serializer_class = Bookingserializer
+    @swagger_auto_schema(operation_summary='List of Bookings.')
     def get(self, request):
         status = request.data.get('status')
         if status is not None:
@@ -327,7 +329,7 @@ class Bookings(GenericAPIView):
                 'message': 'No data found'
             }
             return Response(data=response)
-
+    @swagger_auto_schema(operation_summary='Update the Booking status.')
     def patch(self, request):
         booking_id = request.data.get('booking_id')
         reason = request.data.get('reason')
@@ -370,7 +372,7 @@ class Bookings(GenericAPIView):
 class AuthorityPrivacy(GenericAPIView):
     permission_classes = [IsAuthority]
     serializer_class = PrivacySerializer
-
+    @swagger_auto_schema(operation_summary='Change password of the Authority.')
     def patch(self, request):
         user = request.user
         serializer = self.serializer_class(user, data=request.data)

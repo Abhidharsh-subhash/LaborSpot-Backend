@@ -78,7 +78,7 @@ class VerifyAccountSerializer(serializers.Serializer):
     phone_number=serializers.CharField(validators=[PhoneValidator()])
     otp=serializers.CharField(validators=[OTPValidator()])
 
-class ResendOtpSerializer(serializers.Serializer):
+class ResendotpSerializer(serializers.Serializer):
     phone_number=serializers.CharField(validators=[PhoneValidator()])
 
 class WorkerLoginSerializer(serializers.ModelSerializer):
@@ -103,7 +103,7 @@ class WorkerLoginSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Username and Password are required')
         return attrs
     
-class ForgotPasswordSerializer(serializers.ModelSerializer):
+class ForgotpasswordSerializer(serializers.ModelSerializer):
     phone_number=serializers.CharField(validators=[PhoneValidator])
     def validate(self, attrs):
         phone_number=attrs.get('phone_number')
@@ -198,7 +198,7 @@ class WorkerPrivacySerializer(serializers.ModelSerializer):
         model = Users
         fields = ['password','new_password','confirm_password']
 
-class BookingSerializer(serializers.ModelSerializer):
+class BookingsSerializer(serializers.ModelSerializer):
     username=serializers.SerializerMethodField()
     def get_username(self,obj):
         try:
